@@ -1,52 +1,41 @@
 <template>
   <div class="auth-container">
-    <h2>注册</h2>
-    <form @submit.prevent="handleRegister">
+    <h2>忘记密码</h2>
+    <form @submit.prevent="handleResetPassword">
       <div class="form-group">
-        <label for="reg-username">用户名</label>
-        <input
-            type="text"
-            id="reg-username"
-            v-model="form.username"
-            required
-            placeholder="请输入用户名"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="reg-email">邮箱</label>
+        <label for="reset-email">邮箱</label>
         <input
             type="email"
-            id="reg-email"
+            id="reset-email"
             v-model="form.email"
             required
-            placeholder="请输入邮箱"
+            placeholder="请输入注册邮箱"
         />
       </div>
 
       <div class="form-group">
-        <label for="reg-password">密码</label>
+        <label for="new-password">新密码</label>
         <input
             type="password"
-            id="reg-password"
-            v-model="form.password"
+            id="new-password"
+            v-model="form.newPassword"
             required
-            placeholder="请输入密码"
+            placeholder="请输入新密码"
         />
       </div>
 
       <div class="form-group verification-code">
-        <label for="reg-code">验证码</label>
+        <label for="reset-code">验证码</label>
         <input
             type="text"
-            id="reg-code"
+            id="reset-code"
             v-model="form.code"
             required
             placeholder="请输入验证码"
         />
         <button
             type="button"
-            @click="sendRegisterCode"
+            @click="sendResetCode"
             :disabled="codeButtonDisabled"
         >
           {{ codeButtonText }}
@@ -54,15 +43,16 @@
       </div>
 
       <button type="submit" :disabled="loading">
-        {{ loading ? '注册中...' : '注册' }}
+        {{ loading ? '处理中...' : '重置密码' }}
       </button>
     </form>
 
     <div class="auth-footer">
-      <router-link to="/login">已有账号？立即登录</router-link>
+      <router-link to="/login">返回登录</router-link>
     </div>
 
     <p v-if="error" class="error">{{ error }}</p>
+    <p v-if="success" class="success">{{ success }}</p>
   </div>
 </template>
 
@@ -75,14 +65,14 @@ export default {
   setup() {
     const router = useRouter();
     const form = ref({
-      username: '',
       email: '',
-      password: '',
+      newPassword: '',
       code: ''
     });
 
     const loading = ref(false);
     const error = ref('');
+    const success = ref('');
 
     // 验证码相关状态
     const codeButtonDisabled = ref(false);
@@ -103,16 +93,17 @@ export default {
       }, 1000);
     };
 
-    const sendRegisterCode = async () => {
+    const sendResetCode = async () => {
       try {
         if (!form.value.email) {
           error.value = '请先输入邮箱';
           return;
         }
 
-        const response = await api.sendRegisterCode(form.value.email);
+        const response = await api.sendResetPasswordCode(form.value.email);
         if (response.code === 'success') {
           startCountdown();
+          success.value = '验证码已发送，请查收邮箱';
         } else {
           error.value = response.msg || '发送验证码失败';
         }
@@ -121,26 +112,28 @@ export default {
       }
     };
 
-    const handleRegister = async () => {
+    const handleResetPassword = async () => {
       try {
         loading.value = true;
         error.value = '';
+        success.value = '';
 
-        const response = await api.registerUser(
+        const response = await api.resetPassword(
             form.value.email,
-            form.value.username,
-            form.value.password,
+            form.value.newPassword,
             form.value.code
         );
 
         if (response.code === 'success') {
-          // 注册成功后可以自动登录或跳转到登录页
-          router.push('/login');
+          success.value = '密码重置成功，请使用新密码登录';
+          setTimeout(() => {
+            router.push('/login');
+          }, 2000);
         } else {
-          error.value = response.msg || '注册失败';
+          error.value = response.msg || '重置密码失败';
         }
       } catch (err) {
-        error.value = err.response?.data?.msg || '注册失败';
+        error.value = err.response?.data?.msg || '重置密码失败';
       } finally {
         loading.value = false;
       }
@@ -150,17 +143,18 @@ export default {
       form,
       loading,
       error,
+      success,
       codeButtonDisabled,
       codeButtonText,
-      sendRegisterCode,
-      handleRegister
+      sendResetCode,
+      handleResetPassword
     };
   }
 };
 </script>
 
 <style scoped>
-/* 样式与LoginView类似，可以提取为公共样式 */
+/* 样式与前面组件类似 */
 .auth-container {
   max-width: 400px;
   margin: 0 auto;
@@ -238,6 +232,12 @@ button[type="submit"]:disabled {
 
 .error {
   color: red;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.success {
+  color: green;
   margin-top: 1rem;
   text-align: center;
 }
