@@ -1,13 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://10.168.80.56:8080/api/user';
+const API_BASE_URL = 'http://10.168.82.63:8080/api/user';
+// const API_BASE_URL = 'http://10.168.80.56:8080/api/user';
 
-const api = axios.create({
+const auth = axios.create({
     baseURL: API_BASE_URL,
 });
 
 // 请求拦截器，可以在这里添加token等全局headers
-api.interceptors.request.use(config => {
+auth.interceptors.request.use(config => {
     // 如果需要token验证，可以在这里添加
     // const token = localStorage.getItem('token');
     // if (token) {
@@ -22,7 +23,7 @@ export default {
     // 注册相关
     async sendRegisterCode(email) {
         try {
-            const response = await api.post('/register/send-code', {
+            const response = await auth.post('/register/send-code', {
                 msg: "创建用户发送验证码",
                 e_mail: email
             });
@@ -35,7 +36,7 @@ export default {
 
     async registerUser(email, username, password, code) {
         try {
-            const response = await api.post('/register/verify-code', {
+            const response = await auth.post('/register/verify-code', {
                 msg: "创建用户确认验证码",
                 e_mail: email,
                 user_name: username,
@@ -52,7 +53,7 @@ export default {
     // 重置密码相关
     async sendResetPasswordCode(email) {
         try {
-            const response = await api.post('/reset-password/send-code', {
+            const response = await auth.post('/reset-password/send-code', {
                 msg: "忘记密码发送验证码",
                 e_mail: email
             });
@@ -65,7 +66,7 @@ export default {
 
     async resetPassword(email, newPassword, code) {
         try {
-            const response = await api.post('/reset-password/verify-code', {
+            const response = await auth.post('/reset-password/verify-code', {
                 msg: "提交新密码",
                 e_mail: email,
                 new_passwd: newPassword,
@@ -81,7 +82,7 @@ export default {
     // 登录相关
     async loginWithUsername(username, password) {
         try {
-            const response = await api.post('/login/password', {
+            const response = await auth.post('/login/password', {
                 msg: "登录用户名密码",
                 status: 0,
                 user_name: username,
@@ -104,7 +105,7 @@ export default {
 
     async loginWithEmail(email, password) {
         try {
-            const response = await api.post('/login/password', {
+            const response = await auth.post('/login/password', {
                 msg: "登录邮箱密码",
                 status: 1,
                 e_mail: email,
@@ -127,7 +128,7 @@ export default {
 
     async sendLoginCode(email) {
         try {
-            const response = await api.post('/login/send-code', {
+            const response = await auth.post('/login/send-code', {
                 msg: "登录发送验证码",
                 e_mail: email
             });
@@ -140,7 +141,7 @@ export default {
 
     async loginWithCode(email, code) {
         try {
-            const response = await api.post('/login/verify-code', {
+            const response = await auth.post('/login/verify-code', {
                 msg: "登录邮箱验证码",
                 e_mail: email,
                 mail_code: code
@@ -163,7 +164,7 @@ export default {
     // 获取用户数据
     async getUserData(email, username) {
         try {
-            const response = await api.post('/get-data', {
+            const response = await auth.post('/get-data', {
                 msg: "获取数据",
                 e_mail: email,
                 user_name: username

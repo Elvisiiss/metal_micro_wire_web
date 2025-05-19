@@ -112,7 +112,7 @@
 <script>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '../services/api';
+import api from '../../api/auth.js';
 
 export default {
   setup() {
@@ -190,7 +190,7 @@ export default {
         }
 
         if (response.code === 'success') {
-          router.push('/');
+          router.push('/index');
         } else {
           error.value = response.msg || '登录失败';
         }
@@ -212,7 +212,7 @@ export default {
         );
 
         if (response.code === 'success') {
-          router.push('/');
+          router.push('/index');
         } else {
           error.value = response.msg || '登录失败';
         }

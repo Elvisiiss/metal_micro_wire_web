@@ -69,7 +69,7 @@
 <script>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '../services/api';
+import api from '../../api/auth.js';
 
 export default {
   setup() {
