@@ -16,9 +16,16 @@
           </div>
           <div class="content">
             <div class="name">{{ message.role === 'user' ? userInfo.name : '检测助手' }}</div>
-            <div class="text" v-html="formatMessage(message.content)"></div>
+            <div class="text">
+              <!-- 使用 v-html 渲染 Markdown 转换后的内容 -->
+              <div v-if="message.isFormatted" v-html="message.formattedContent"></div>
+              <div v-else>
+                <span v-html="formatMessageSimple(message.displayContent)"></span>
+                <span v-if="message.isTyping" class="typing-cursor">|</span>
+              </div>
+            </div>
             <div v-if="message.role === 'assistant' && message.isLoading" class="typing-indicator">
-              <span></span><span></span><span></span>
+              正在思考<span></span><span></span><span></span>
             </div>
           </div>
         </div>
@@ -52,6 +59,39 @@
 <script>
 import { ref, onMounted, nextTick } from 'vue';
 
+// 简单的 Markdown 转 HTML 转换器
+function markdownToHtml(text) {
+  if (!text) return '';
+
+  // 处理换行
+  let html = text.replace(/\n/g, '<br>');
+
+  // 处理粗体：**text**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // 处理斜体：*text*
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  // 处理内联代码：`code`
+  html = html.replace(/`(.*?)`/g, '<code>$1</code>');
+
+  // 处理代码块：```language\ncode\n```
+  html = html.replace(/```(\w*)\n([^`]+)```/g, '<div class="code-block"><span class="code-lang">$1</span><pre><code>$2</code></pre></div>');
+
+  // 处理无序列表
+  html = html.replace(/^- (.*?)(<br>|$)/g, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)+/g, '<ul>$&</ul>');
+
+  // 处理有序列表
+  html = html.replace(/^\d+\. (.*?)(<br>|$)/g, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)+/g, '<ol>$&</ol>');
+
+  // 处理引用
+  html = html.replace(/^&gt; (.*?)(<br>|$)/g, '<blockquote>$1</blockquote>');
+
+  return html;
+}
+
 export default {
   setup() {
     // 用户头像
@@ -78,10 +118,9 @@ export default {
       5. 不要提供任何与检测无关的信息
       6. 使用中文回答所有问题
     `;
-    // const systemPrompt = `
-    // 你是一个原神里面的角色，叫做纳西妲。
-    // 你只能用中文回答所有问题。
-    // `;
+
+    // 打字机效果的定时器
+    let typewriterTimer = null;
 
     // 滚动到最新消息
     const scrollToBottom = () => {
@@ -92,16 +131,54 @@ export default {
       });
     };
 
-    // 格式化消息中的换行和代码
-    const formatMessage = (text) => {
-      if (!text) return ''; // 防止处理未定义的值
-      return text.replace(/\n/g, '<br>')
-          .replace(/```([^`]+)```/g, '<div class="code-block">$1</div>');
+    // 简单的消息格式化 - 仅处理换行
+    const formatMessageSimple = (text) => {
+      if (!text) return '';
+      return text.replace(/\n/g, '<br>');
+    };
+
+    // 打字机效果 - 逐字显示消息
+    const typewriterEffect = (messageIndex, content) => {
+      let charIndex = 0;
+      const message = chatMessages.value[messageIndex];
+
+      // 清空现有内容
+      message.displayContent = '';
+      message.isTyping = true;
+
+      const typeNextChar = () => {
+        if (charIndex < content.length) {
+          // 添加下一个字符
+          message.displayContent += content.charAt(charIndex);
+          charIndex++;
+          scrollToBottom();
+          typewriterTimer = setTimeout(typeNextChar, 30); // 控制打字速度
+        } else {
+          // 打字完成
+          message.isTyping = false;
+          message.content = content; // 保存完整内容
+
+          // 将内容转换为 Markdown 格式
+          message.formattedContent = markdownToHtml(content);
+          message.isFormatted = true;
+
+          typewriterTimer = null;
+        }
+      };
+
+      // 开始打字效果
+      typeNextChar();
     };
 
     // 发送消息到DeepSeek API
     const sendMessage = async () => {
       if (isLoading.value || !userInput.value || !userInput.value.trim()) return;
+
+      // 清除之前的打字机效果
+      if (typewriterTimer) {
+        clearTimeout(typewriterTimer);
+        typewriterTimer = null;
+      }
 
       const userMessage = userInput.value.trim();
       userInput.value = '';
@@ -110,6 +187,8 @@ export default {
       chatMessages.value.push({
         role: 'user',
         content: userMessage,
+        displayContent: userMessage,
+        isFormatted: false,
         timestamp: new Date()
       });
 
@@ -117,13 +196,18 @@ export default {
       chatMessages.value.push({
         role: 'assistant',
         content: '',
+        displayContent: '',
+        formattedContent: '',
         isLoading: true,
+        isTyping: false,
+        isFormatted: false,
         timestamp: new Date()
       });
 
       scrollToBottom();
 
       isLoading.value = true;
+      const aiMessageIndex = chatMessages.value.length - 1;
 
       try {
         // 注意：实际项目中API密钥应从安全的后端获取，这里仅为演示
@@ -164,32 +248,34 @@ export default {
         const data = await response.json();
         const aiResponse = data.choices[0].message.content;
 
-        // 移除加载状态，添加AI响应
-        chatMessages.value.pop();
-        chatMessages.value.push({
-          role: 'assistant',
-          content: aiResponse,
-          timestamp: new Date()
-        });
+        // 更新AI消息状态
+        chatMessages.value[aiMessageIndex].isLoading = false;
+
+        // 启动打字机效果
+        typewriterEffect(aiMessageIndex, aiResponse);
       } catch (error) {
         console.error('API请求错误:', error);
-        chatMessages.value.pop();
-        chatMessages.value.push({
-          role: 'assistant',
-          content: `抱歉，处理您的请求时出错: ${error.message}`,
-          timestamp: new Date()
-        });
+        chatMessages.value[aiMessageIndex].isLoading = false;
+        chatMessages.value[aiMessageIndex].displayContent = `抱歉，处理您的请求时出错: ${error.message}`;
+        chatMessages.value[aiMessageIndex].content = chatMessages.value[aiMessageIndex].displayContent;
+        chatMessages.value[aiMessageIndex].formattedContent = markdownToHtml(chatMessages.value[aiMessageIndex].displayContent);
+        chatMessages.value[aiMessageIndex].isFormatted = true;
       } finally {
         isLoading.value = false;
-        scrollToBottom();
       }
     };
 
     // 初始化示例对话
     onMounted(() => {
+      const welcomeMessage = '您好！我是金属微细线材检测助手。我可以帮助您解答关于线径测量、拉伸强度测试、电导率分析等专业问题。请问有什么可以帮您的？';
       chatMessages.value.push({
         role: 'assistant',
-        content: '您好！我是金属微细线材检测助手。我可以帮助您解答关于线径测量、拉伸强度测试、电导率分析等专业问题。请问有什么可以帮您的？',
+        content: welcomeMessage,
+        displayContent: welcomeMessage,
+        formattedContent: markdownToHtml(welcomeMessage),
+        isLoading: false,
+        isTyping: false,
+        isFormatted: true,
         timestamp: new Date()
       });
     });
@@ -202,7 +288,7 @@ export default {
       messagesContainer,
       userInfo,
       sendMessage,
-      formatMessage
+      formatMessageSimple
     };
   }
 };
@@ -317,6 +403,7 @@ export default {
   line-height: 1.5;
   font-size: 15px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
 .message.user .text {
@@ -332,7 +419,26 @@ export default {
   border-top-left-radius: 4px;
 }
 
-.message.assistant .text >>> .code-block {
+/* Markdown 样式 */
+.message.assistant .text strong {
+  font-weight: bold;
+  color: #1a3a6e;
+}
+
+.message.assistant .text em {
+  font-style: italic;
+}
+
+.message.assistant .text code {
+  background-color: #f5f7fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  color: #e74c3c;
+}
+
+.message.assistant .text .code-block {
   background: #f8f9fa;
   border-left: 3px solid #4e73df;
   padding: 10px;
@@ -341,6 +447,40 @@ export default {
   white-space: pre-wrap;
   border-radius: 4px;
   font-size: 14px;
+  position: relative;
+  overflow-x: auto;
+}
+
+.message.assistant .text .code-block .code-lang {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  font-size: 12px;
+  color: #6c757d;
+  font-family: sans-serif;
+}
+
+.message.assistant .text pre {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.message.assistant .text ul,
+.message.assistant .text ol {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.message.assistant .text li {
+  margin-bottom: 5px;
+}
+
+.message.assistant .text blockquote {
+  border-left: 3px solid #4e73df;
+  padding-left: 10px;
+  margin: 10px 0;
+  color: #555;
 }
 
 .chat-input {
@@ -403,6 +543,9 @@ export default {
 .typing-indicator {
   display: flex;
   padding: 10px 0;
+  align-items: center;
+  color: #666;
+  font-size: 14px;
 }
 
 .typing-indicator span {
@@ -430,6 +573,20 @@ export default {
   40% {
     transform: scale(1);
   }
+}
+
+/* 打字机光标效果 */
+.typing-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+  color: #333;
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 /* 响应式调整 */

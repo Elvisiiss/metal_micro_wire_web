@@ -15,7 +15,11 @@ const router = createRouter({
     {path: '/register', name: 'register', component: RegisterView},
     {path: '/index', name: 'indexPage', component: import('../views/IndexPage/Dashboard.vue')},
     {path: '/forgot-password', name: 'forgot-password', component: ForgotPasswordView},
-    {path: '/Landing', name: 'Landing', component: Landing}
+    {path: '/Landing', name: 'Landing', component: Landing},
+    {path: '/questionnaire', name: 'Questionnaire', component: () => import('@/views/Public/questionnaire.vue')},
+    {path: '/suggestion-and-feedback', name: 'SuggestionAndFeedback', component: () => import('@/views/Public/SuggestionAndFeedback.vue')},
+    {path: '/user-settings', name: 'UserSettings', component: () => import('@/views/Public/UserSettings.vue')},
+    {path: '/help-center', name: 'HelpCenter', component: () => import('@/views/Public/Helps.vue')}
   ],
 })
 

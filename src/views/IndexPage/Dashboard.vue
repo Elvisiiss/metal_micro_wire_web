@@ -26,7 +26,7 @@
             <i class="icon-help"></i>
           </a>
         </div>
-        <div class="user-profile">
+        <div class="user-profile" @click="toggleDropdown">
           <div class="user-avatar">
             <img :src="userAvatar" alt="用户头像">
           </div>
@@ -35,6 +35,31 @@
             <div class="user-status">
               <span class="status-dot"></span>
               <span class="status-text">在线</span>
+            </div>
+          </div>
+
+          <!-- 下拉菜单 -->
+          <div v-show="showDropdown" class="dropdown-menu">
+            <div class="dropdown-item" @click="navigateTo('questionnaire')">
+              <i class="icon-form"></i>
+              <span>调查问卷</span>
+            </div>
+            <div class="dropdown-item" @click="navigateTo('feedback')">
+              <i class="icon-feedback"></i>
+              <span>建议反馈</span>
+            </div>
+            <div class="dropdown-item" @click="navigateTo('settings')">
+              <i class="icon-user"></i>
+              <span>账号信息</span>
+            </div>
+            <div class="dropdown-item" @click="navigateTo('help')">
+              <i class="icon-help"></i>
+              <span>帮助中心</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item" @click="logout">
+              <i class="icon-logout"></i>
+              <span>退出登录</span>
             </div>
           </div>
         </div>
@@ -61,6 +86,10 @@ import Overview from './Overview.vue';
 import DataScreen from './DataScreen.vue';
 import ChatView from './ChatView.vue';
 
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth'; // 确保路径正确
+
+
 export default {
   components: {
     Overview,
@@ -68,6 +97,9 @@ export default {
     ChatView
   },
   setup() {
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const showDropdown = ref(false);
     // 用户头像
     const userAvatar = ref('https://thirdwx.qlogo.cn/mmopen/vi_32/hQoOP719jarWIicoBGJoqLkju7oicBOtuZempcjbzQXibqnIWWF1BnTHfiaQujUHTSR4ocWz66c9CqcRl7ic8BbAg9Vt6j0TBIfyQib39ibCnKtxvQ/132');
 
@@ -79,10 +111,45 @@ export default {
       activeTab.value = tab;
     };
 
+    // 切换下拉菜单显示状态
+    const toggleDropdown = () => {
+      showDropdown.value = !showDropdown.value;
+    };
+
+    // 导航到不同页面
+    const navigateTo = (type) => {
+      showDropdown.value = false;
+      switch (type) {
+        case 'questionnaire':
+          router.push('/questionnaire');
+          break;
+        case 'feedback':
+          router.push('/suggestion-and-feedback');
+          break;
+        case 'settings':
+          router.push('/user-settings');
+          break;
+        case 'help':
+          router.push('/help-center');
+          break;
+      }
+    };
+
+    // 退出登录
+    const logout = () => {
+      showDropdown.value = false;
+      authStore.clearUser();
+      router.push('/login');
+    };
+
     return {
       userAvatar,
       activeTab,
-      setActiveTab
+      showDropdown,
+      setActiveTab,
+      toggleDropdown,
+      navigateTo,
+      logout
     };
   }
 };
@@ -282,4 +349,55 @@ export default {
     display: none;
   }
 }
+
+.user-profile {
+  position: relative;
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  width: 180px;
+  z-index: 2000;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f7fa;
+}
+
+.dropdown-item i {
+  margin-right: 10px;
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #eee;
+  margin: 4px 0;
+}
+
+/* 新增图标样式 */
+.icon-form::before { content: "📋"; }
+.icon-feedback::before { content: "💬"; }
+.icon-user::before { content: "👤"; }
+.icon-help::before { content: "❓"; }
+.icon-logout::before { content: "🚪"; }
 </style>
