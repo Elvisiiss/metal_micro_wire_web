@@ -44,7 +44,7 @@
         <!-- 登录方式切换 -->
         <div class="auth-tabs">
           <div class="tab-slider" :style="{ transform: `translateX(${activeTab === 'account' ? '0%' : '100%'})` }"></div>
-          <button 
+          <button
             type="button"
             @click="activeTab = 'account'"
             :class="['tab-button', { active: activeTab === 'account' }]"
@@ -55,7 +55,7 @@
             </svg>
             密码登录
           </button>
-          <button 
+          <button
             type="button"
             @click="activeTab = 'code'"
             :class="['tab-button', { active: activeTab === 'code' }]"
@@ -73,34 +73,19 @@
         <!-- 账号密码登录 -->
         <form v-if="activeTab === 'account'" @submit.prevent="handleAccountLogin" class="login-form">
           <div class="form-field">
-            <label class="field-label">登录方式</label>
-            <div class="select-group">
-              <select v-model="accountLoginType" class="form-select">
-                <option value="username">用户名</option>
-                <option value="email">邮箱地址</option>
-              </select>
-              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6,9 12,15 18,9"/>
-              </svg>
-            </div>
-          </div>
-
-          <div class="form-field">
             <label class="field-label">
-              {{ accountLoginType === 'username' ? '用户名' : '邮箱地址' }}
+              用户名/邮箱
             </label>
             <div class="input-group">
               <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path v-if="accountLoginType === 'username'" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle v-if="accountLoginType === 'username'" cx="12" cy="7" r="4"/>
-                <rect v-else x="2" y="4" width="20" height="16" rx="2"/>
-                <path v-else d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
               </svg>
               <input
-                v-model="accountForm[accountLoginType]"
-                :type="accountLoginType === 'email' ? 'email' : 'text'"
+                v-model="accountForm.account"
+                :type="'text'"
                 class="form-input"
-                :placeholder="accountLoginType === 'username' ? '请输入用户名' : '请输入邮箱地址'"
+                :placeholder="'请输入用户名/邮箱'"
                 required
               >
             </div>
@@ -120,8 +105,8 @@
                 placeholder="请输入密码"
                 required
               >
-              <button 
-                type="button" 
+              <button
+                type="button"
                 @click="togglePasswordVisibility"
                 class="password-toggle"
               >
@@ -178,7 +163,7 @@
                 placeholder="请输入验证码"
                 required
               >
-              <button 
+              <button
                 type="button"
                 @click="sendLoginCode"
                 :disabled="codeButtonDisabled"
@@ -236,16 +221,13 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../api/auth.js';
-// import {useAuthStore} from "@/stores/auth.js";
+
 
 const router = useRouter();
 const activeTab = ref('account');
-const accountLoginType = ref('username');
-// const authStore = useAuthStore()
 
 const accountForm = ref({
-  username: '',
-  email: '',
+  account: '',
   password: ''
 });
 
@@ -265,16 +247,16 @@ let countdown = 60;
 
 // 特性列表
 const features = computed(() => [
-  { 
+  {
     icon: 'SecurityIcon',
     text: '企业级安全保障'
   },
-  { 
-    icon: 'SpeedIcon', 
+  {
+    icon: 'SpeedIcon',
     text: '毫秒级响应速度'
   },
-  { 
-    icon: 'CloudIcon', 
+  {
+    icon: 'CloudIcon',
     text: '7x24小时服务'
   }
 ]);
@@ -321,17 +303,10 @@ const handleAccountLogin = async () => {
     error.value = '';
 
     let response;
-    if (accountLoginType.value === 'username') {
-      response = await api.loginWithUsername(
-          accountForm.value.username,
-          accountForm.value.password
-      );
-    } else {
-      response = await api.loginWithEmail(
-          accountForm.value.email,
-          accountForm.value.password
-      );
-    }
+    response = await api.loginWithUsername(
+        accountForm.value.account,
+        accountForm.value.password
+    )
 
     if (response.code === 'success') {
       router.push('/index');
@@ -876,7 +851,7 @@ const handleCodeLogin = async () => {
   .decoration-panel {
     display: none;
   }
-  
+
   .form-panel {
     flex: 1;
   }
@@ -886,26 +861,26 @@ const handleCodeLogin = async () => {
   .form-panel {
     padding: 20px;
   }
-  
+
   .form-header h2 {
     font-size: 1.75rem;
   }
-  
+
   .tab-button {
     font-size: 0.85rem;
     padding: 12px 16px;
   }
-  
+
   .tab-button svg {
     width: 14px;
     height: 14px;
   }
-  
+
   .form-footer {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .footer-link {
     justify-content: center;
   }
@@ -915,11 +890,11 @@ const handleCodeLogin = async () => {
   .form-container {
     max-width: 100%;
   }
-  
+
   .verification-group .form-input {
     padding-right: 100px;
   }
-  
+
   .code-button {
     font-size: 0.8rem;
     padding: 6px 12px;

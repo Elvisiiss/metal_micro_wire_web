@@ -80,12 +80,12 @@ export default {
     },
 
     // 登录相关
-    async loginWithUsername(username, password) {
+    async loginWithUsername(account, password) {
         try {
             const response = await auth.post('/login/password', {
-                msg: "登录用户名密码",
+                msg: "密码登录",
                 status: 0,
-                user_name: username,
+                account: account,
                 passwd: password
             });
             // 登录成功可以在这里保存用户信息
@@ -98,30 +98,7 @@ export default {
             }
             return response.data;
         } catch (error) {
-            console.error('用户名登录失败', error.response?.data);
-            throw error;
-        }
-    },
-
-    async loginWithEmail(email, password) {
-        try {
-            const response = await auth.post('/login/password', {
-                msg: "登录邮箱密码",
-                status: 1,
-                e_mail: email,
-                passwd: password
-            });
-            // 登录成功可以在这里保存用户信息
-            if (response.data.code === "success") {
-                localStorage.setItem('userInfo', JSON.stringify({
-                    email: response.data.e_mail,
-                    username: response.data.user_name,
-                    role: response.data.role_id
-                }));
-            }
-            return response.data;
-        } catch (error) {
-            console.error('邮箱登录失败', error.response?.data);
+            console.error('登录失败', error.response?.data);
             throw error;
         }
     },
