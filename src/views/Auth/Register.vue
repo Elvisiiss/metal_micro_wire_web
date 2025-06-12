@@ -66,95 +66,82 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../api/auth.js';
 
-export default {
-  setup() {
-    const router = useRouter();
-    const form = ref({
-      username: '',
-      email: '',
-      password: '',
-      code: ''
-    });
 
-    const loading = ref(false);
-    const error = ref('');
+const router = useRouter();
+const form = ref({
+  username: '',
+  email: '',
+  password: '',
+  code: ''
+});
 
-    // 验证码相关状态
-    const codeButtonDisabled = ref(false);
-    const codeButtonText = ref('获取验证码');
-    let countdown = 60;
+const loading = ref(false);
+const error = ref('');
 
-    const startCountdown = () => {
-      codeButtonDisabled.value = true;
-      const timer = setInterval(() => {
-        countdown--;
-        codeButtonText.value = `${countdown}秒后重试`;
-        if (countdown <= 0) {
-          clearInterval(timer);
-          codeButtonText.value = '获取验证码';
-          codeButtonDisabled.value = false;
-          countdown = 60;
-        }
-      }, 1000);
-    };
+// 验证码相关状态
+const codeButtonDisabled = ref(false);
+const codeButtonText = ref('获取验证码');
+let countdown = 60;
 
-    const sendRegisterCode = async () => {
-      try {
-        if (!form.value.email) {
-          error.value = '请先输入邮箱';
-          return;
-        }
+const startCountdown = () => {
+  codeButtonDisabled.value = true;
+  const timer = setInterval(() => {
+    countdown--;
+    codeButtonText.value = `${countdown}秒后重试`;
+    if (countdown <= 0) {
+      clearInterval(timer);
+      codeButtonText.value = '获取验证码';
+      codeButtonDisabled.value = false;
+      countdown = 60;
+    }
+  }, 1000);
+};
 
-        const response = await api.sendRegisterCode(form.value.email);
-        if (response.code === 'success') {
-          startCountdown();
-        } else {
-          error.value = response.msg || '发送验证码失败';
-        }
-      } catch (err) {
-        error.value = err.response?.data?.msg || '发送验证码失败';
-      }
-    };
+const sendRegisterCode = async () => {
+  try {
+    if (!form.value.email) {
+      error.value = '请先输入邮箱';
+      return;
+    }
 
-    const handleRegister = async () => {
-      try {
-        loading.value = true;
-        error.value = '';
+    const response = await api.sendRegisterCode(form.value.email);
+    if (response.code === 'success') {
+      startCountdown();
+    } else {
+      error.value = response.msg || '发送验证码失败';
+    }
+  } catch (err) {
+    error.value = err.response?.data?.msg || '发送验证码失败';
+  }
+};
 
-        const response = await api.registerUser(
-            form.value.email,
-            form.value.username,
-            form.value.password,
-            form.value.code
-        );
+const handleRegister = async () => {
+  try {
+    loading.value = true;
+    error.value = '';
 
-        if (response.code === 'success') {
-          // 注册成功后可以自动登录或跳转到登录页
-          router.push('/login');
-        } else {
-          error.value = response.msg || '注册失败';
-        }
-      } catch (err) {
-        error.value = err.response?.data?.msg || '注册失败';
-      } finally {
-        loading.value = false;
-      }
-    };
+    const response = await api.registerUser(
+        form.value.email,
+        form.value.username,
+        form.value.password,
+        form.value.code
+    );
 
-    return {
-      form,
-      loading,
-      error,
-      codeButtonDisabled,
-      codeButtonText,
-      sendRegisterCode,
-      handleRegister
-    };
+    if (response.code === 'success') {
+      // 注册成功后可以自动登录或跳转到登录页
+      router.push('/login');
+    } else {
+      error.value = response.msg || '注册失败';
+    }
+  } catch (err) {
+    error.value = err.response?.data?.msg || '注册失败';
+  } finally {
+    loading.value = false;
   }
 };
 </script>

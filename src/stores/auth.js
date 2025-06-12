@@ -10,7 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = {
             id: userData.user_id,
             user_name: userData.user_name,
-            email: userData.email,
+            e_mail: userData.e_mail,
             role_id: userData.role_id
         }
         isAuthenticated.value = true
@@ -31,39 +31,11 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    function isStudent() {
-        return user.value?.powers.includes(1)
-    }
-
-    function isTeacher() {
-        return user.value?.powers.includes(2)
-    }
-
-    function isAdmin() {
-        return user.value?.powers.includes(3)
-    }
-
-    function redirectBasedOnRole() {
-        if (isAdmin()) {
-            router.push('/admin')
-        } else if (isTeacher()) {
-            router.push('/teacher')
-        } else if (isStudent()) {
-            router.push('/student')
-        } else {
-            router.push('/login')
-        }
-    }
-
     return {
         user,
         isAuthenticated,
         setUser,
         clearUser,
         loadUserFromStorage,
-        isStudent,
-        isTeacher,
-        isAdmin,
-        redirectBasedOnRole
     }
 })

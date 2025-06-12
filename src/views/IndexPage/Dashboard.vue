@@ -10,7 +10,7 @@
         <ul class="nav-menu">
           <li :class="{active: activeTab === 'dashboard'}"><a @click="setActiveTab('dashboard')">仪表盘</a></li>
           <li :class="{active: activeTab === 'dataScreen'}"><a @click="setActiveTab('dataScreen')">数据大屏</a></li>
-          <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能聊天</a></li>
+          <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
           <li><a>检测管理</a></li>
           <li><a>数据分析</a></li>
           <li><a>系统设置</a></li>

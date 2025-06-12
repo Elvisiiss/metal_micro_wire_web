@@ -56,99 +56,85 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../api/auth.js';
 
-export default {
-  setup() {
-    const router = useRouter();
-    const form = ref({
-      email: '',
-      newPassword: '',
-      code: ''
-    });
 
-    const loading = ref(false);
-    const error = ref('');
-    const success = ref('');
+const router = useRouter();
+const form = ref({
+  email: '',
+  newPassword: '',
+  code: ''
+});
 
-    // 验证码相关状态
-    const codeButtonDisabled = ref(false);
-    const codeButtonText = ref('获取验证码');
-    let countdown = 60;
+const loading = ref(false);
+const error = ref('');
+const success = ref('');
 
-    const startCountdown = () => {
-      codeButtonDisabled.value = true;
-      const timer = setInterval(() => {
-        countdown--;
-        codeButtonText.value = `${countdown}秒后重试`;
-        if (countdown <= 0) {
-          clearInterval(timer);
-          codeButtonText.value = '获取验证码';
-          codeButtonDisabled.value = false;
-          countdown = 60;
-        }
-      }, 1000);
-    };
+// 验证码相关状态
+const codeButtonDisabled = ref(false);
+const codeButtonText = ref('获取验证码');
+let countdown = 60;
 
-    const sendResetCode = async () => {
-      try {
-        if (!form.value.email) {
-          error.value = '请先输入邮箱';
-          return;
-        }
+const startCountdown = () => {
+  codeButtonDisabled.value = true;
+  const timer = setInterval(() => {
+    countdown--;
+    codeButtonText.value = `${countdown}秒后重试`;
+    if (countdown <= 0) {
+      clearInterval(timer);
+      codeButtonText.value = '获取验证码';
+      codeButtonDisabled.value = false;
+      countdown = 60;
+    }
+  }, 1000);
+};
 
-        const response = await api.sendResetPasswordCode(form.value.email);
-        if (response.code === 'success') {
-          startCountdown();
-          success.value = '验证码已发送，请查收邮箱';
-        } else {
-          error.value = response.msg || '发送验证码失败';
-        }
-      } catch (err) {
-        error.value = err.response?.data?.msg || '发送验证码失败';
-      }
-    };
+const sendResetCode = async () => {
+  try {
+    if (!form.value.email) {
+      error.value = '请先输入邮箱';
+      return;
+    }
 
-    const handleResetPassword = async () => {
-      try {
-        loading.value = true;
-        error.value = '';
-        success.value = '';
+    const response = await api.sendResetPasswordCode(form.value.email);
+    if (response.code === 'success') {
+      startCountdown();
+      success.value = '验证码已发送，请查收邮箱';
+    } else {
+      error.value = response.msg || '发送验证码失败';
+    }
+  } catch (err) {
+    error.value = err.response?.data?.msg || '发送验证码失败';
+  }
+};
 
-        const response = await api.resetPassword(
-            form.value.email,
-            form.value.newPassword,
-            form.value.code
-        );
+const handleResetPassword = async () => {
+  try {
+    loading.value = true;
+    error.value = '';
+    success.value = '';
 
-        if (response.code === 'success') {
-          success.value = '密码重置成功，请使用新密码登录';
-          setTimeout(() => {
-            router.push('/login');
-          }, 2000);
-        } else {
-          error.value = response.msg || '重置密码失败';
-        }
-      } catch (err) {
-        error.value = err.response?.data?.msg || '重置密码失败';
-      } finally {
-        loading.value = false;
-      }
-    };
+    const response = await api.resetPassword(
+        form.value.email,
+        form.value.newPassword,
+        form.value.code
+    );
 
-    return {
-      form,
-      loading,
-      error,
-      success,
-      codeButtonDisabled,
-      codeButtonText,
-      sendResetCode,
-      handleResetPassword
-    };
+    if (response.code === 'success') {
+      success.value = '密码重置成功，请使用新密码登录';
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    } else {
+      error.value = response.msg || '重置密码失败';
+    }
+  } catch (err) {
+    error.value = err.response?.data?.msg || '重置密码失败';
+  } finally {
+    loading.value = false;
   }
 };
 </script>
