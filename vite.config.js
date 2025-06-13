@@ -19,6 +19,15 @@ export default defineConfig({
     host: '0.0.0.0', // 监听所有 IPv4 地址
     port: 5173,      // 指定端口（默认 5173）
     strictPort: true, // 如果端口被占用，直接退出
+    proxy: {
+      '/api': {
+        // target: 'http://10.168.82.63:8080',
+        target: 'http://10.168.80.56:8080',
+        changeOrigin: true,
+        secure: false,
+        // rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })
 

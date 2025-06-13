@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://10.168.82.63:8080/api/user';
-// const API_BASE_URL = 'http://10.168.80.56:8080/api/user';
+// 使用代理路径，实际请求会被代理到后端服务器
+const API_BASE_URL = '/api/auth';
 
 const auth = axios.create({
     baseURL: API_BASE_URL,

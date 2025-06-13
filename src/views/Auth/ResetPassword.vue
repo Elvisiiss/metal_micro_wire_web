@@ -263,6 +263,20 @@ const handleResetPassword = async () => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+/* 隐藏浏览器自带的密码可见性按钮 */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+
+input[type="password"]::-webkit-input-decoration-container {
+  display: none !important;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -493,7 +507,7 @@ const handleResetPassword = async () => {
 
 .form-input {
   width: 100%;
-  padding: 16px 20px 16px 48px;
+  padding: 16px 48px 16px 48px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
@@ -501,6 +515,12 @@ const handleResetPassword = async () => {
   color: #2d3748;
   background: white;
   transition: all 0.3s ease;
+}
+
+/* 密码输入框特殊样式 */
+.form-input[type="password"],
+.form-input.password-input {
+  padding-right: 48px;
 }
 
 .form-input:focus {
