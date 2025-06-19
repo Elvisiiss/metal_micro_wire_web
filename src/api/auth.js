@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 // 使用代理路径，实际请求会被代理到后端服务器
 const API_BASE_URL = '/api/auth';
 
@@ -7,17 +8,6 @@ const auth = axios.create({
     baseURL: API_BASE_URL,
 });
 
-// 请求拦截器，可以在这里添加token等全局headers
-auth.interceptors.request.use(config => {
-    // 如果需要token验证，可以在这里添加
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
-    return config;
-}, error => {
-    return Promise.reject(error);
-});
 
 export default {
     // 注册相关
@@ -151,5 +141,29 @@ export default {
             console.error('获取用户数据失败', error.response?.data);
             throw error;
         }
-    }
+    },
+
+    async loginWithRoot(userName, password) {
+        try {
+            const response = await auth.post('/root/login', {
+                msg: "ROOT用户登录",
+                status: 0,
+                userName: userName,
+                password: password
+            });
+            // 登录成功可以在这里保存用户信息
+            if (response.data.code === "success") {
+                localStorage.setItem('userInfo', JSON.stringify({
+                    email: response.data.e_mail,
+                    username: response.data.user_name,
+                    role: response.data.role_id,
+                    token: response.data.token
+                }));
+            }
+            return response.data;
+        } catch (error) {
+            console.error('登录失败', error.response?.data);
+            throw error;
+        }
+    },
 };

@@ -5,16 +5,12 @@
       <div class="navbar-left">
         <div class="logo">
           <span class="logo-icon">⦿</span>
-          <span class="logo-text">金属微细线材检测平台</span>
+          <span class="logo-text">金属微细线材检测平台 - ROOT界面</span>
         </div>
         <ul class="nav-menu">
-          <li :class="{active: activeTab === 'dashboard'}"><a @click="setActiveTab('dashboard')">仪表盘</a></li>
-          <li :class="{active: activeTab === 'dataScreen'}"><a @click="setActiveTab('dataScreen')">数据大屏</a></li>
-          <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
-          <li><a>检测管理</a></li>
-          <li><a>数据分析</a></li>
-          <li><a>系统设置</a></li>
-          <li :class="{active: activeTab === 'equipmentManage'}"><a @click="setActiveTab('equipmentManage')">设备管理</a></li>
+          <li :class="{active: activeTab === 'RootIndexPage'}"><a @click="setActiveTab('RootIndexPage')">仪表盘</a></li>
+          <li><a>数据大屏</a></li>
+          <li><a>智能决策</a></li>
         </ul>
       </div>
       <div class="navbar-right">
@@ -32,21 +28,9 @@
 
           <!-- 下拉菜单 -->
           <div v-show="showDropdown" class="dropdown-menu">
-            <div class="dropdown-item" @click="navigateTo('questionnaire')">
-              <i class="icon-form"></i>
-              <span>调查问卷</span>
-            </div>
-            <div class="dropdown-item" @click="navigateTo('feedback')">
-              <i class="icon-feedback"></i>
-              <span>建议反馈</span>
-            </div>
             <div class="dropdown-item" @click="openUserSettings">
               <i class="icon-user"></i>
               <span>账号信息</span>
-            </div>
-            <div class="dropdown-item" @click="navigateTo('help')">
-              <i class="icon-help"></i>
-              <span>帮助中心</span>
             </div>
             <div class="dropdown-divider"></div>
             <div class="dropdown-item" @click="logout">
@@ -60,17 +44,9 @@
 
     <!-- 主内容区 -->
     <main class="dashboard-content">
-      <!-- 仪表盘视图 -->
-      <Overview v-if="activeTab === 'dashboard'"/>
+      <!-- RootIndexPage 页面 -->
+      <RootIndexPage v-if="activeTab === 'RootIndexPage'"/>
 
-      <!-- 数据大屏视图 -->
-      <DataScreen v-if="activeTab === 'dataScreen'" />
-
-      <!-- 智能聊天视图 -->
-      <ChatView v-if="activeTab === 'chat'"/>
-
-      <!-- 设备管理-->
-      <EquipmentManageDashboard v-if="activeTab === 'equipmentManage'"/>
     </main>
     <!-- 账号信息悬浮窗 -->
     <transition name="slide-fade">
@@ -94,11 +70,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import Overview from './Overview.vue';
-import DataScreen from './DataScreen.vue';
-import ChatView from './ChatView.vue';
-import UserSettings from '../Public/UserSettings.vue'; // 导入UserSettings组件
-import EquipmentManageDashboard from "@/views/IndexPage/EquipmentManageDashboard.vue";
+import RootIndexPage from '../Root/RootIndexPage.vue';
 
 
 import { useRouter } from 'vue-router';
@@ -117,7 +89,7 @@ const user_name = authStore.user?.user_name;
 const userAvatar = ref('https://thirdwx.qlogo.cn/mmopen/vi_32/hQoOP719jarWIicoBGJoqLkju7oicBOtuZempcjbzQXibqnIWWF1BnTHfiaQujUHTSR4ocWz66c9CqcRl7ic8BbAg9Vt6j0TBIfyQib39ibCnKtxvQ/132');
 
 // 活动标签
-const activeTab = ref('dashboard');
+const activeTab = ref('RootIndexPage');
 
 // 设置活动标签
 const setActiveTab = (tab) => {
@@ -144,17 +116,8 @@ const closeUserSettings = () => {
 const navigateTo = (type) => {
   showDropdown.value = false;
   switch (type) {
-    case 'questionnaire':
-      router.push('/questionnaire');
-      break;
-    case 'feedback':
-      router.push('/suggestion-and-feedback');
-      break;
     case 'settings':
       router.push('/user-settings');
-      break;
-    case 'help':
-      router.push('/help-center');
       break;
   }
 };

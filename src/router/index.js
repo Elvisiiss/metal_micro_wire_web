@@ -19,7 +19,8 @@ const router = createRouter({
     {path: '/questionnaire', name: 'Questionnaire', component: () => import('@/views/Public/questionnaire.vue')},
     {path: '/suggestion-and-feedback', name: 'SuggestionAndFeedback', component: () => import('@/views/Public/SuggestionAndFeedback.vue')},
     {path: '/user-settings', name: 'UserSettings', component: () => import('@/views/Public/UserSettings.vue')},
-    {path: '/help-center', name: 'HelpCenter', component: () => import('@/views/Public/Helps.vue')}
+    {path: '/help-center', name: 'HelpCenter', component: () => import('@/views/Public/Helps.vue')},
+    {path: '/root', name: 'rootIndexPage', component: () => import('@/views/Root/RootDashboard.vue')},
   ],
 })
 

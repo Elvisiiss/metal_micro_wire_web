@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
     const user = ref(null)
@@ -8,10 +7,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     function setUser(userData) {
         user.value = {
-            id: userData.user_id,
             user_name: userData.user_name,
             e_mail: userData.e_mail,
-            role_id: userData.role_id
+            role_id: userData.role_id,
+            token: userData.token,
         }
         isAuthenticated.value = true
         localStorage.setItem('user', JSON.stringify(user.value))

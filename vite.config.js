@@ -21,8 +21,8 @@ export default defineConfig({
     strictPort: true, // 如果端口被占用，直接退出
     proxy: {
       '/api': {
-        // target: 'http://10.168.82.63:8080',
-        target: 'http://10.168.80.56:8080',
+        target: 'http://10.168.82.63:8080',
+        // target: 'http://10.168.80.56:8080',
         changeOrigin: true,
         secure: false,
         // rewrite: (path) => path.replace(/^\/api/, '')

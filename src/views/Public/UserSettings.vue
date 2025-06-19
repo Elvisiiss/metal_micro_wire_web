@@ -41,10 +41,6 @@
               <label>邮箱</label>
               <input type="email" v-model="user.email">
             </div>
-            <div class="form-group">
-              <label>手机号码</label>
-              <input type="tel" v-model="user.phone">
-            </div>
           </div>
         </div>
         <div class="card-footer">
@@ -113,7 +109,6 @@ const authStore = useAuthStore()
 const user = ref({
   username: '张工',
   email: 'zhang.gong@example.com',
-  phone: '13800138000',
   role: '管理员',
   avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/hQoOP719jarWIicoBGJoqLkju7oicBOtuZempcjbzQXibqnIWWF1BnTHfiaQujUHTSR4ocWz66c9CqcRl7ic8BbAg9Vt6j0TBIfyQib39ibCnKtxvQ/132',
   twoFactorAuth: false
@@ -132,8 +127,8 @@ const avatarInput = ref(null)
 // 初始化用户数据
 onMounted(() => {
   if (authStore.user) {
-    user.value.username = authStore.user.user_name || '张工'
-    user.value.email = authStore.user.email || 'zhang.gong@example.com'
+    user.value.username = authStore.user.user_name || 'error'
+    user.value.email = authStore.user.e_mail || 'error'
   }
 })
 
