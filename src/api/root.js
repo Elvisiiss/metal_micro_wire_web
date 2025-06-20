@@ -22,13 +22,15 @@ auth.interceptors.request.use(config => {
 
 export default {
     // 获取用户列表（分页）
-    async getUserList(page, size, keyword) {
+    async getUserList(page, size, keyword, sortBy, sortDir) {
         try {
             const response = await auth.get('/users', {
                 params: {
                     page,
                     size,
-                    keyword
+                    keyword,
+                    sortBy,
+                    sortDir
                 }
             });
             return response.data;

@@ -8,9 +8,7 @@
           <span class="logo-text">金属微细线材检测平台 - ROOT界面</span>
         </div>
         <ul class="nav-menu">
-          <li :class="{active: activeTab === 'RootIndexPage'}"><a @click="setActiveTab('RootIndexPage')">仪表盘</a></li>
-          <li><a>数据大屏</a></li>
-          <li><a>智能决策</a></li>
+          <li :class="{active: activeTab === 'RootIndexPage'}"><a @click="setActiveTab('RootIndexPage')">用户管理</a></li>
         </ul>
       </div>
       <div class="navbar-right">
@@ -71,8 +69,7 @@
 <script setup>
 import { ref } from 'vue';
 import RootIndexPage from '../Root/RootIndexPage.vue';
-
-
+import UserSettings from '@/views/Public/UserSettings.vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
