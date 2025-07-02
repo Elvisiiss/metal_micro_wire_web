@@ -15,6 +15,7 @@
           <li><a>数据分析</a></li>
           <li><a>系统设置</a></li>
           <li :class="{active: activeTab === 'equipmentManage'}"><a @click="setActiveTab('equipmentManage')">设备管理</a></li>
+          <li :class="{active: activeTab === 'ApplicationScenario'}"><a @click="setActiveTab('ApplicationScenario')">应用场景管理</a></li>
         </ul>
       </div>
       <div class="navbar-right">
@@ -71,6 +72,9 @@
 
       <!-- 设备管理-->
       <EquipmentManageDashboard v-if="activeTab === 'equipmentManage'"/>
+
+      <!-- 设备管理-->
+      <ApplicationScenario v-if="activeTab === 'ApplicationScenario'"/>
     </main>
     <!-- 账号信息悬浮窗 -->
     <transition name="slide-fade">
@@ -99,6 +103,7 @@ import DataScreen from './DataScreen.vue';
 import ChatView from './ChatView.vue';
 import UserSettings from '../Public/UserSettings.vue'; // 导入UserSettings组件
 import EquipmentManageDashboard from "@/views/IndexPage/EquipmentManageDashboard.vue";
+import ApplicationScenario from './ApplicationScenario.vue'
 import AuthAPI from '@/api/auth.js'
 
 import { useRouter } from 'vue-router';
