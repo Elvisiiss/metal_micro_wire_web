@@ -38,47 +38,47 @@
               @change="handleSortChange"
               class="sort-select"
           >
-            <el-option label="创建时间降序" value="createTime-desc" />
-            <el-option label="创建时间升序" value="createTime-asc" />
-            <el-option label="用户ID降序" value="id-desc" />
             <el-option label="用户ID升序" value="id-asc" />
+            <el-option label="用户ID降序" value="id-desc" />
+            <el-option label="创建时间升序" value="createTime-asc" />
+            <el-option label="创建时间降序" value="createTime-desc" />
           </el-select>
         </div>
       </el-col>
-      
+
       <el-col :span="12" style="text-align: right;">
         <transition name="batch-actions" mode="out-in">
           <el-button-group v-if="isBatchMode" key="batch" class="batch-actions">
             <el-button @click="selectCurrentPage" size="small">
               {{ areAllCurrentPageSelected ? '取消全选' : '全选本页' }}
             </el-button>
-            <el-button 
-                @click="batchEnable" 
-                type="success" 
+            <el-button
+                @click="batchEnable"
+                type="success"
                 size="small"
                 :disabled="selectedDisabledCount === 0"
             >
               启用 ({{ selectedDisabledCount }})
             </el-button>
-            <el-button 
-                @click="batchDisable" 
-                type="warning" 
+            <el-button
+                @click="batchDisable"
+                type="warning"
                 size="small"
                 :disabled="selectedEnabledCount === 0"
             >
               禁用 ({{ selectedEnabledCount }})
             </el-button>
-            <el-button 
-                @click="batchPromote" 
-                type="primary" 
+            <el-button
+                @click="batchPromote"
+                type="primary"
                 size="small"
                 :disabled="selectedNormalUserCount === 0"
             >
               提权 ({{ selectedNormalUserCount }})
             </el-button>
-            <el-button 
-                @click="batchDemote" 
-                type="danger" 
+            <el-button
+                @click="batchDemote"
+                type="danger"
                 size="small"
                 :disabled="selectedAdminCount === 0"
             >
@@ -87,8 +87,8 @@
           </el-button-group>
         </transition>
 
-        <el-button 
-            @click="toggleBatchMode" 
+        <el-button
+            @click="toggleBatchMode"
             :type="isBatchMode ? 'danger' : 'primary'"
             plain
         >
@@ -113,13 +113,13 @@
           width="55"
           :selectable="() => true"
       />
-      
+
       <el-table-column prop="id" label="ID" width="80" align="center">
         <template #default="{ row }">
           <el-tag size="small" type="info">#{{ row.id }}</el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="userName" label="用户名" min-width="120">
         <template #default="{ row }">
           <div class="user-info">
@@ -130,9 +130,9 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="email" label="邮箱" min-width="200" show-overflow-tooltip />
-      
+
       <el-table-column prop="roleId" label="角色" width="100" align="center">
         <template #default="{ row }">
           <el-tag :type="row.roleId === 1 ? 'warning' : 'info'" size="small">
@@ -140,7 +140,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="status" label="状态" width="80" align="center">
         <template #default="{ row }">
           <el-tag :type="row.status === 0 ? 'success' : 'danger'" size="small">
@@ -148,13 +148,13 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <el-table-column prop="createTime" label="创建时间" width="180" align="center">
         <template #default="{ row }">
           {{ formatDate(row.createTime) }}
         </template>
       </el-table-column>
-      
+
       <el-table-column v-if="!isBatchMode" label="操作" width="160" align="center" fixed="right">
         <template #default="{ row }">
           <el-button
@@ -178,7 +178,7 @@
 
       <!-- 空状态 -->
       <template #empty>
-        <el-empty 
+        <el-empty
             :image-size="120"
             :description="searchKeyword ? '没有找到匹配的用户' : '暂无用户数据'"
         />
@@ -220,9 +220,9 @@ const searchKeyword = ref('')
 const isBatchMode = ref(false)
 const selectedUserIds = ref([])
 const loading = ref(false)
-const sortBy = ref('createTime')
-const sortDir = ref('desc')
-const sortOption = ref('createTime-desc')
+const sortBy = ref('id')
+const sortDir = ref('asc')
+const sortOption = ref('id-asc')
 const tableRef = ref()
 
 // Element Plus 分页需要的数据
@@ -244,7 +244,7 @@ const areAllSelected = computed(() => {
 // 计算当前页是否全选
 const areAllCurrentPageSelected = computed(() => {
   const currentPageIds = users.value.map(user => user.id)
-  return currentPageIds.length > 0 && 
+  return currentPageIds.length > 0 &&
          currentPageIds.every(id => selectedUserIds.value.includes(id))
 })
 
@@ -279,8 +279,8 @@ const fetchUsers = async () => {
   loading.value = true
   try {
     const response = await rootAPI.getUserList(
-        currentPage.value, 
-        pageSize.value, 
+        currentPage.value,
+        pageSize.value,
         searchKeyword.value,
         sortBy.value,
         sortDir.value
@@ -685,11 +685,11 @@ const handleSortChange = (value) => {
   .user-management {
     padding: 12px;
   }
-  
+
   .header-stats {
     flex-wrap: wrap;
   }
-  
+
   .batch-actions {
     margin-right: 0;
     margin-bottom: 10px;

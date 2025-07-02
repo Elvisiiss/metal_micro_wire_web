@@ -166,4 +166,17 @@ export default {
             throw error;
         }
     },
+
+    async DetermineToken(token) {
+        try {
+            return await auth.get('/token', {
+                params: {
+                    token:token
+                }
+            });
+        } catch (error) {
+            console.error('登录失败', error.response?.data);
+            throw error;
+        }
+    }
 };

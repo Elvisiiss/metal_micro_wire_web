@@ -23,7 +23,7 @@
             <img :src="userAvatar" alt="用户头像">
           </div>
           <div class="user-info">
-            <span class="user-name">{{ user_name }} (管理员)</span>
+            <span class="user-name">{{ user_name }} ({{ authStore.user?.role_id === 1 ? '管理员' : '普通用户' }})</span>
             <div class="user-status">
               <span class="status-dot"></span>
               <span class="status-text">在线</span>
@@ -93,16 +93,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import Overview from './Overview.vue';
 import DataScreen from './DataScreen.vue';
 import ChatView from './ChatView.vue';
 import UserSettings from '../Public/UserSettings.vue'; // 导入UserSettings组件
 import EquipmentManageDashboard from "@/views/IndexPage/EquipmentManageDashboard.vue";
-
+import AuthAPI from '@/api/auth.js'
 
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import {ElMessage} from "element-plus";
 
 
 
@@ -165,6 +166,22 @@ const logout = () => {
   authStore.clearUser();
   router.push('/login');
 }
+
+// 生命周期钩子
+onMounted(async () => {
+  const r = ref()
+  try{
+    r.value = (await AuthAPI.DetermineToken(authStore.user?.token)).data
+  }catch(error){}
+  if (r.value !== 0 && r.value !== 1) {
+    if(r.value === 999){
+      await router.push('/root')
+      ElMessage.error("请使用普通登录")
+    }else{
+      logout()
+    }
+  }
+})
 </script>
 
 <style scoped>
