@@ -155,22 +155,6 @@
         </el-button>
       </div>
     </el-card>
-
-    <!-- 使用说明 -->
-    <el-card class="info-card">
-      <template #header>
-        <div class="card-header">
-          <span>使用说明</span>
-        </div>
-      </template>
-
-      <div class="info-content">
-        <p>1. 启动监听器后，系统将开始接收来自华为云IoT平台的消息</p>
-        <p>2. 监听器状态将显示消息处理的实时统计信息</p>
-        <p>3. 当成功率低于95%时，请检查日志排查问题</p>
-        <p>4. 健康检查功能验证数据库和Redis的连接状态</p>
-      </div>
-    </el-card>
   </div>
 </template>
 

@@ -19,7 +19,7 @@
           </div>
           <div class="flex items-center">
             <a class="btn-gradient text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition no-underline">
-              <router-link to="/login">免费试用</router-link>
+              <router-link :to="whereTo" class="...">立即使用</router-link>
             </a>
           </div>
         </div>
@@ -242,7 +242,7 @@
         </p>
         <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
           <a class="btn-gradient text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition no-underline">
-            <router-link to="/login">免费试用</router-link>
+            <router-link :to="whereTo" class="...">免费试用</router-link>
           </a>
           <button class="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium border border-blue-100 hover:bg-blue-50 transition">
             联系我们
@@ -310,7 +310,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import AuthAPI from "@/api/auth.js";
+import {useAuthStore} from "@/stores/auth.js";
+const whereTo = ref("/login")
+const authStore = useAuthStore();
+onMounted(async () => {
+  const r = ref()
+  try{
+    r.value = (await AuthAPI.DetermineToken(authStore.user?.token)).data
+  }catch(error){}
+  if (r.value === 0){ whereTo.value = "/index"}
+  if (r.value === 1){ whereTo.value = "/index"}
+  if (r.value === 999){ whereTo.value = "/root"}
+})
 
 const features = ref([
   {

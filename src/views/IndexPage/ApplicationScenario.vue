@@ -9,7 +9,7 @@
     <!-- 操作栏 -->
     <div class="action-bar">
       <el-row :gutter="20">
-        <el-col :span="6">
+        <el-col :span="5">
           <el-input
               v-model="searchParams.scenarioNameKeyword"
               placeholder="搜索场景名称"
@@ -23,7 +23,7 @@
           </el-input>
         </el-col>
 
-        <el-col :span="6">
+        <el-col :span="5">
           <el-select
               v-model="searchParams.wireType"
               placeholder="选择线材类型"
@@ -39,7 +39,7 @@
           </el-select>
         </el-col>
 
-        <el-col :span="6">
+        <el-col :span="4">
           <el-select
               v-model="searchParams.sortBy"
               placeholder="排序字段"
@@ -48,6 +48,17 @@
             <el-option label="创建时间" value="createTime" />
             <el-option label="更新时间" value="updateTime" />
             <el-option label="场景名称" value="scenarioName" />
+          </el-select>
+        </el-col>
+
+        <el-col :span="4">
+          <el-select
+              v-model="searchParams.sortDirection"
+              placeholder="排序方向"
+              @change="fetchScenarios"
+          >
+            <el-option label="升序 (ASC)" value="asc" />
+            <el-option label="降序 (DESC)" value="desc" />
           </el-select>
         </el-col>
 
@@ -73,38 +84,65 @@
 
       <el-table-column prop="wireType" label="线材类型" width="120" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.wireType === 'Cu' ? 'success' : 'info'">
+          <el-tag :color="getWireTagColor(row.wireType)" effect="dark">
             {{ row.wireType }}
           </el-tag>
         </template>
       </el-table-column>
 
-      <el-table-column label="电导率" width="180" align="center">
+      <el-table-column label="电导率(MS/m)" width="180" align="center">
         <template #default="{ row }">
-          {{ row.conductivityMin }} - {{ row.conductivityMax }}
+          <div class="param-cell">
+            <div>△上限：{{ formatNumber(row.conductivityMax) }}<template v-if="row.conductivityMax !== null"> MS/m</template></div>
+            <div>▽下限：{{ formatNumber(row.conductivityMin) }}<template v-if="row.conductivityMin !== null"> MS/m</template></div>
+          </div>
         </template>
       </el-table-column>
 
-      <el-table-column label="延展率(%)" width="120" align="center">
+      <el-table-column label="延展率(δ)" width="120" align="center">
         <template #default="{ row }">
-          {{ row.extensibilityMin }} - {{ row.extensibilityMax }}
+          <div class="param-cell">
+            <div>△上限：{{ formatNumber(row.extensibilityMax, 'extensibility') }}<template v-if="row.extensibilityMax !== null"> δ</template></div>
+            <div>▽下限：{{ formatNumber(row.extensibilityMin, 'extensibility') }}<template v-if="row.extensibilityMin !== null"> δ</template></div>
+          </div>
         </template>
       </el-table-column>
 
       <el-table-column label="重量(g)" width="140" align="center">
         <template #default="{ row }">
-          {{ row.weightMin }} - {{ row.weightMax }}
+          <div class="param-cell">
+            <div>△上限：{{ formatNumber(row.weightMax) }}<template v-if="row.weightMax !== null"> g</template></div>
+            <div>▽下限：{{ formatNumber(row.weightMin) }}<template v-if="row.weightMin !== null"> g</template></div>
+          </div>
         </template>
       </el-table-column>
 
       <el-table-column label="直径(mm)" width="140" align="center">
         <template #default="{ row }">
-          {{ row.diameterMin }} - {{ row.diameterMax }}
+          <div class="param-cell">
+            <div>△上限：{{ formatNumber(row.diameterMax) }}<template v-if="row.diameterMax !== null"> mm</template></div>
+            <div>▽下限：{{ formatNumber(row.diameterMin) }}<template v-if="row.diameterMin !== null"> mm</template></div>
+          </div>
         </template>
       </el-table-column>
 
-      <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
-      <el-table-column prop="updateTime" label="更新时间" width="180" align="center" />
+      <el-table-column label="创建时间" width="180" align="center">
+        <template #default="{ row }">
+          <div class="time-cell">
+            <div>{{ formatDate(row.createTime).date }}</div>
+            <div>{{ formatDate(row.createTime).time }}</div>
+          </div>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="更新时间" width="180" align="center">
+        <template #default="{ row }">
+          <div class="time-cell">
+            <div>{{ formatDate(row.updateTime).date }}</div>
+            <div>{{ formatDate(row.updateTime).time }}</div>
+          </div>
+        </template>
+      </el-table-column>
 
       <el-table-column label="操作" width="180" fixed="right" align="center" v-if="isAdmin">
         <template #default="{ row }">
@@ -124,8 +162,9 @@
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           :total="totalElements"
-          @size-change="fetchScenarios"
+          @size-change="handleSizeChange"
           @current-change="fetchScenarios"
+          :pager-count="5"
       />
     </div>
 
@@ -168,6 +207,7 @@
                   :step="0.1"
                   controls-position="right"
               />
+              <span class="unit-text">MS/m</span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -178,59 +218,64 @@
                   :step="0.1"
                   controls-position="right"
               />
+              <span class="unit-text">MS/m</span>
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="延展率下限(%)">
+            <el-form-item label="延展率下限">
               <el-input-number
                   v-model="formData.extensibilityMin"
                   :min="0"
                   :step="1"
                   controls-position="right"
               />
+              <span class="unit-text">δ</span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="延展率上限(%)">
+            <el-form-item label="延展率上限">
               <el-input-number
                   v-model="formData.extensibilityMax"
                   :min="0"
                   :step="1"
                   controls-position="right"
               />
+              <span class="unit-text">δ</span>
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="重量下限(g)">
+            <el-form-item label="重量下限">
               <el-input-number
                   v-model="formData.weightMin"
                   :min="0"
                   :step="0.1"
                   controls-position="right"
               />
+              <span class="unit-text">g</span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="重量上限(g)">
+            <el-form-item label="重量上限">
               <el-input-number
                   v-model="formData.weightMax"
                   :min="0"
                   :step="0.1"
                   controls-position="right"
               />
+              <span class="unit-text">g</span>
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="直径下限(mm)">
+            <el-form-item label="直径下限">
               <el-input-number
                   v-model="formData.diameterMin"
                   :min="0"
@@ -238,10 +283,11 @@
                   :precision="2"
                   controls-position="right"
               />
+              <span class="unit-text">mm</span>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="直径上限(mm)">
+            <el-form-item label="直径上限">
               <el-input-number
                   v-model="formData.diameterMax"
                   :min="0"
@@ -249,6 +295,7 @@
                   :precision="2"
                   controls-position="right"
               />
+              <span class="unit-text">mm</span>
             </el-form-item>
           </el-col>
         </el-row>
@@ -277,8 +324,8 @@ const isAdmin = computed(() => authStore.user?.role_id === 1)
 // 响应式数据
 const scenarios = ref([])
 const loading = ref(false)
-const currentPage = ref(0)
-const pageSize = ref(10)
+const currentPage = ref(1) // 从1开始的分页
+const pageSize = ref(20)
 const totalPages = ref(0)
 const totalElements = ref(0)
 
@@ -287,7 +334,7 @@ const searchParams = ref({
   wireType: '',
   scenarioNameKeyword: '',
   sortBy: 'createTime',
-  sortDirection: 'desc'
+  sortDirection: 'asc' // 默认升序
 })
 
 // 表单数据
@@ -316,12 +363,62 @@ const wireTypes = [
   { value: 'Zn', label: '锌 (Zn)' }
 ]
 
+// 格式化日期时间
+const formatDate = (dateString) => {
+  if (!dateString) return { date: '', time: '' }
+
+  try {
+    const dateObj = new Date(dateString)
+    const date = dateObj.toISOString().split('T')[0]
+    const time = dateObj.toTimeString().split(' ')[0]
+    return { date, time }
+  } catch (e) {
+    console.error('日期格式化错误:', e)
+    const [date, timePart] = dateString.split('T')
+    const time = timePart ? timePart.substring(0, 8) : ''
+    return { date, time }
+  }
+}
+
+// 数值格式化函数
+const formatNumber = (value, type = 'default') => {
+  if (value === null || value === undefined || value === '') return ''
+
+  const num = parseFloat(value)
+  if (isNaN(num)) return ''
+
+  switch (type) {
+    case 'extensibility':
+      return num.toFixed(1)
+    case 'conductivity':
+    case 'weight':
+    case 'diameter':
+    default:
+      return num.toFixed(2)
+  }
+}
+
+// 获取线材类型对应的标签颜色
+const getWireTagColor = (type) => {
+  const colorMap = {
+    'Cu': '#b87333', // 铜色 - 古铜色
+    'Al': '#A8A8A8', // 铝色 - 银灰色
+    'Ni': '#C0C0C0', // 镍色 - 银色
+    'Ti': '#808080', // 钛色 - 深灰色
+    'Zn': '#7CB9E8'  // 锌色 - 天蓝色
+  }
+  return colorMap[type] || '#909399' // 默认灰色
+}
+
 // 加载应用场景列表
 const fetchScenarios = async () => {
   loading.value = true
   try {
+    // 将前端页码(1-based)转换为后端API的页码(0-based)
+    const apiPage = currentPage.value - 1
+
     const response = await scenarioAPI.getScenarioList(
-        currentPage.value,
+        apiPage,
         pageSize.value,
         searchParams.value.wireType,
         searchParams.value.scenarioNameKeyword,
@@ -330,7 +427,8 @@ const fetchScenarios = async () => {
     )
 
     scenarios.value = response.data.scenarios
-    currentPage.value = response.data.currentPage
+    // 将后端返回的0-based页码转换为1-based
+    currentPage.value = response.data.currentPage + 1
     pageSize.value = response.data.pageSize
     totalPages.value = response.data.totalPages
     totalElements.value = response.data.totalElements
@@ -342,14 +440,22 @@ const fetchScenarios = async () => {
   }
 }
 
+// 处理每页条数变化
+const handleSizeChange = (newSize) => {
+  pageSize.value = newSize
+  currentPage.value = 1 // 重置到第一页
+  fetchScenarios()
+}
+
 // 重置搜索
 const resetSearch = () => {
   searchParams.value = {
     wireType: '',
     scenarioNameKeyword: '',
     sortBy: 'createTime',
-    sortDirection: 'desc'
+    sortDirection: 'asc' // 重置为升序
   }
+  currentPage.value = 1 // 重置到第一页
   fetchScenarios()
 }
 
@@ -501,5 +607,31 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: center;
+}
+
+/* 参数单元格样式 */
+.param-cell {
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.param-cell div:first-child {
+  margin-bottom: 4px;
+}
+
+/* 时间单元格样式 */
+.time-cell {
+  line-height: 1.6;
+}
+
+.time-cell div:first-child {
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.unit-text {
+  margin-left: 5px;
+  color: #606266;
+  font-size: 14px;
 }
 </style>

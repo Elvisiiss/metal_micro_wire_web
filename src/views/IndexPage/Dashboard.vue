@@ -12,8 +12,7 @@
           <li :class="{active: activeTab === 'dataScreen'}"><a @click="setActiveTab('dataScreen')">数据大屏</a></li>
           <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
           <li :class="{active: activeTab === 'mwManagement'}"><a @click="setActiveTab('mwManagement')">检测管理</a></li>
-          <li><a>数据分析</a></li>
-          <li :class="{active: activeTab === 'SystemConfig'}"><a @click="setActiveTab('SystemConfig')">系统设置</a></li>
+          <li :class="{active: activeTab === 'DataAnalysis'}"><a @click="setActiveTab('DataAnalysis')">数据分析</a></li>
           <li :class="{active: activeTab === 'equipmentManage'}"><a @click="setActiveTab('equipmentManage')">设备管理</a></li>
           <li :class="{active: activeTab === 'ApplicationScenario'}"><a @click="setActiveTab('ApplicationScenario')">应用场景管理</a></li>
         </ul>
@@ -49,6 +48,9 @@
               <i class="icon-help"></i>
               <span>帮助中心</span>
             </div>
+            <div class="dropdown-item" @click="setActiveTab('SystemConfig')">
+              <span>系统设置</span>
+            </div>
             <div class="dropdown-divider"></div>
             <div class="dropdown-item" @click="logout">
               <i class="icon-logout"></i>
@@ -81,6 +83,9 @@
 
       <!-- 系统设置-->
       <SystemConfig v-if="activeTab === 'SystemConfig'"/>
+
+      <!-- 数据分析-->
+      <DataAnalysis v-if="activeTab === 'DataAnalysis'"/>
     </main>
     <!-- 账号信息悬浮窗 -->
     <transition name="slide-fade">
@@ -117,6 +122,7 @@ import AuthAPI from '@/api/auth.js'
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {ElMessage} from "element-plus";
+import DataAnalysis from "@/views/IndexPage/DataAnalysis.vue";
 
 
 

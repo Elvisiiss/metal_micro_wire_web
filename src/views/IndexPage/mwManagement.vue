@@ -139,9 +139,17 @@
         </template>
       </el-table-column>
 
-      <el-table-column prop="deviceId" label="设备ID" width="140" />
+      <el-table-column label="设备资料" width="230">
+        <template #default="{ row }">
+          <div class="device-info">
+            <div><span class="info-label">设备ID:</span> {{ row.deviceId }}</div>
+            <div><span class="info-label">设备编号:</span> {{ row.deviceCode }}</div>
+            <div><span class="info-label">场景编号:</span> {{ row.scenarioCode }}</div>
+          </div>
+        </template>
+      </el-table-column>
 
-      <el-table-column label="技术参数" width="300">
+      <el-table-column label="技术参数" width="250">
         <template #default="{ row }">
           <div class="tech-params">
             <div><span class="param-label">直径:</span> {{ row.diameter }} mm</div>
@@ -152,11 +160,13 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="生产信息" min-width="250">
+      <!-- 生产信息列（包含联系邮箱） -->
+      <el-table-column label="生产信息" min-width="200">
         <template #default="{ row }">
           <div class="production-info">
             <div><span class="info-label">生产商:</span> {{ row.manufacturer }}</div>
             <div><span class="info-label">负责人:</span> {{ row.responsiblePerson }}</div>
+            <div><span class="info-label">联系邮箱:</span> {{ row.contactEmail }}</div>
             <div><span class="info-label">工艺:</span> {{ row.processType }}</div>
             <div><span class="info-label">机器:</span> {{ row.productionMachine }}</div>
           </div>
@@ -291,6 +301,15 @@
 
         <el-form-item label="联系邮箱" prop="contactEmail">
           <el-input v-model="editingWire.contactEmail" maxlength="100" />
+        </el-form-item>
+
+        <!-- 新增设备信息编辑字段 -->
+        <el-form-item label="设备编号" prop="deviceCode">
+          <el-input v-model="editingWire.deviceCode" maxlength="50" />
+        </el-form-item>
+
+        <el-form-item label="应用场景编号" prop="scenarioCode">
+          <el-input v-model="editingWire.scenarioCode" maxlength="50" />
         </el-form-item>
       </el-form>
 
@@ -497,7 +516,8 @@ const formatDateTime = (dateString) => {
 }
 
 .tech-params,
-.production-info {
+.production-info,
+.device-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
