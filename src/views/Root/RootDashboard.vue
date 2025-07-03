@@ -101,7 +101,7 @@ onMounted(async () => {
 
 
 // 用户头像
-const userAvatar = ref('https://thirdwx.qlogo.cn/mmopen/vi_32/hQoOP719jarWIicoBGJoqLkju7oicBOtuZempcjbzQXibqnIWWF1BnTHfiaQujUHTSR4ocWz66c9CqcRl7ic8BbAg9Vt6j0TBIfyQib39ibCnKtxvQ/132');
+const userAvatar = ref('http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12');
 
 // 活动标签
 const activeTab = ref('RootIndexPage');

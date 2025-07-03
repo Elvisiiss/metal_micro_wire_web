@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container">
+  <div class="dashboard-container" @click="handleContainerClick">
     <!-- 顶部导航栏 -->
     <header class="top-navbar">
       <div class="navbar-left">
@@ -18,7 +18,7 @@
         </ul>
       </div>
       <div class="navbar-right">
-        <div class="user-profile" @click="toggleDropdown">
+        <div class="user-profile" @click.stop="toggleDropdown" ref="userProfileRef">
           <div class="user-avatar">
             <img :src="userAvatar" alt="用户头像">
           </div>
@@ -31,24 +31,17 @@
           </div>
 
           <!-- 下拉菜单 -->
-          <div v-show="showDropdown" class="dropdown-menu">
-            <div class="dropdown-item" @click="navigateTo('questionnaire')">
-              <i class="icon-form"></i>
-              <span>调查问卷</span>
-            </div>
-            <div class="dropdown-item" @click="navigateTo('feedback')">
-              <i class="icon-feedback"></i>
-              <span>建议反馈</span>
-            </div>
+          <div v-show="showDropdown" class="dropdown-menu" ref="dropdownMenuRef">
             <div class="dropdown-item" @click="openUserSettings">
               <i class="icon-user"></i>
               <span>账号信息</span>
             </div>
-            <div class="dropdown-item" @click="navigateTo('help')">
+            <div class="dropdown-item" @click="setActiveTab('Helps')">
               <i class="icon-help"></i>
               <span>帮助中心</span>
             </div>
             <div class="dropdown-item" @click="setActiveTab('SystemConfig')">
+              <i class="icon-settings"></i>
               <span>系统设置</span>
             </div>
             <div class="dropdown-divider"></div>
@@ -86,6 +79,9 @@
 
       <!-- 数据分析-->
       <DataAnalysis v-if="activeTab === 'DataAnalysis'"/>
+
+      <!-- 数据分析-->
+      <Helps v-if="activeTab === 'Helps'"/>
     </main>
     <!-- 账号信息悬浮窗 -->
     <transition name="slide-fade">
@@ -108,7 +104,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, onBeforeUnmount} from 'vue';
 import Overview from './Overview.vue';
 import DataScreen from './DataScreen.vue';
 import ChatView from './ChatView.vue';
@@ -123,8 +119,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {ElMessage} from "element-plus";
 import DataAnalysis from "@/views/IndexPage/DataAnalysis.vue";
-
-
+import Helps from "@/views/Public/Helps.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -132,9 +127,12 @@ const showDropdown = ref(false);
 const showUserSettings = ref(false); // 控制悬浮窗显示
 const user_name = authStore.user?.user_name;
 
+// 获取DOM元素的引用
+const userProfileRef = ref(null);
+const dropdownMenuRef = ref(null);
 
 // 用户头像
-const userAvatar = ref('https://thirdwx.qlogo.cn/mmopen/vi_32/hQoOP719jarWIicoBGJoqLkju7oicBOtuZempcjbzQXibqnIWWF1BnTHfiaQujUHTSR4ocWz66c9CqcRl7ic8BbAg9Vt6j0TBIfyQib39ibCnKtxvQ/132');
+const userAvatar = ref('http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12');
 
 // 活动标签
 const activeTab = ref('dashboard');
@@ -142,11 +140,12 @@ const activeTab = ref('dashboard');
 // 设置活动标签
 const setActiveTab = (tab) => {
   activeTab.value = tab;
+  showDropdown.value = false;
 };
 
 // 切换下拉菜单显示状态
 const toggleDropdown = () => {
-  showDropdown.value = !showDropdown.value;
+  showDropdown.value = true;
 };
 
 // 打开账号信息悬浮窗
@@ -160,31 +159,23 @@ const closeUserSettings = () => {
   showUserSettings.value = false;
 };
 
-// 导航到不同页面
-const navigateTo = (type) => {
-  showDropdown.value = false;
-  switch (type) {
-    case 'questionnaire':
-      router.push('/questionnaire');
-      break;
-    case 'feedback':
-      router.push('/suggestion-and-feedback');
-      break;
-    case 'settings':
-      router.push('/user-settings');
-      break;
-    case 'help':
-      router.push('/help-center');
-      break;
-  }
-};
-
 // 退出登录
 const logout = () => {
   showDropdown.value = false;
   authStore.clearUser();
   router.push('/login');
 }
+
+// 点击容器收起下拉菜单
+const handleContainerClick = (event) => {
+  if (!showDropdown.value) return;
+
+  const isClickInsideUserProfile = userProfileRef.value?.contains(event.target);
+
+  if (!isClickInsideUserProfile) {
+    showDropdown.value = false;
+  }
+};
 
 // 生命周期钩子
 onMounted(async () => {
@@ -200,7 +191,15 @@ onMounted(async () => {
       logout()
     }
   }
-})
+
+  // 添加全局点击事件监听器
+  document.addEventListener('click', handleContainerClick);
+});
+
+// 组件卸载前移除事件监听器
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleContainerClick);
+});
 </script>
 
 <style scoped>
@@ -297,45 +296,6 @@ onMounted(async () => {
   align-items: center;
 }
 
-.nav-tool {
-  display: flex;
-  margin-right: 20px;
-}
-
-.tool-item {
-  position: relative;
-  margin-left: 20px;
-  color: #5f6368;
-  font-size: 18px;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.3s;
-  cursor: pointer;
-}
-
-.tool-item:hover {
-  background-color: #f1f3f4;
-}
-
-.badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background-color: #f44336;
-  color: white;
-  border-radius: 10px;
-  font-size: 10px;
-  min-width: 18px;
-  height: 18px;
-  line-height: 18px;
-  text-align: center;
-  padding: 0 4px;
-}
-
 .user-profile {
   display: flex;
   align-items: center;
@@ -343,6 +303,7 @@ onMounted(async () => {
   padding: 8px;
   border-radius: 24px;
   transition: background-color 0.3s;
+  position: relative;
 }
 
 .user-profile:hover {
@@ -403,16 +364,21 @@ onMounted(async () => {
   cursor: pointer;
 }
 
+/* 下拉菜单样式美化 */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
   background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  width: 180px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 220px;
   z-index: 2000;
   overflow: hidden;
+  border: 1px solid #ebeef5;
+  padding: 8px 0;
+  transition: all 0.3s ease;
+  transform-origin: top right;
 }
 
 .dropdown-item {
@@ -420,34 +386,57 @@ onMounted(async () => {
   align-items: center;
   padding: 12px 16px;
   font-size: 14px;
-  color: #333;
+  color: #606266;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  line-height: 1.5;
 }
 
 .dropdown-item:hover {
   background-color: #f5f7fa;
+  color: #1a73e8;
 }
 
 .dropdown-item i {
-  margin-right: 10px;
+  margin-right: 12px;
   font-size: 16px;
   width: 20px;
   text-align: center;
+  color: #909399;
+  transition: color 0.2s;
+}
+
+.dropdown-item:hover i {
+  color: #1a73e8;
 }
 
 .dropdown-divider {
   height: 1px;
-  background-color: #eee;
-  margin: 4px 0;
+  background-color: #ebeef5;
+  margin: 6px 0;
 }
 
 /* 新增图标样式 */
-.icon-form::before { content: "📋"; }
-.icon-feedback::before { content: "💬"; }
 .icon-user::before { content: "👤"; }
 .icon-help::before { content: "❓"; }
 .icon-logout::before { content: "🚪"; }
+.icon-settings::before { content: "⚙️"; }
+
+/* 下拉菜单动画 */
+.dropdown-menu {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .user-settings-modal {
   position: fixed;
@@ -458,7 +447,7 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 3000;
+  z-index: 2000;
 }
 
 .modal-overlay {
@@ -519,21 +508,6 @@ onMounted(async () => {
   padding: 20px;
 }
 
-/* 动画效果 */
-.slide-fade-enter-active {
-  transition: all 0.3s ease-out;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
 @keyframes bounceIn {
   0% {
     transform: scale(0.95);
@@ -553,6 +527,10 @@ onMounted(async () => {
   .modal-content {
     width: 95%;
     max-height: 85vh;
+  }
+
+  .dropdown-menu {
+    width: 180px;
   }
 }
 

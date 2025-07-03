@@ -50,10 +50,11 @@ export default {
     },
 
     // 创建设备
-    async createDevice(deviceId) {
+    async createDevice(deviceId,deviceCode) {
         try {
             const response = await auth.post('', {
-                deviceId
+                deviceId,
+                deviceCode
             });
             return response.data;
         } catch (error) {

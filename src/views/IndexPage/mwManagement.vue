@@ -8,9 +8,6 @@
       </div>
       <div class="header-stats">
         <el-tag>当前页: {{ wireMaterials.length }} 条记录</el-tag>
-        <el-tag v-if="selectedBatchNumbers.length > 0" type="success">
-          已选择: {{ selectedBatchNumbers.length }}
-        </el-tag>
       </div>
     </div>
 
@@ -48,78 +45,92 @@
 
     <!-- 高级筛选 -->
     <el-collapse v-model="advancedSearchActive">
-      <el-collapse-item title="高级筛选" name="1">
-        <el-row :gutter="16">
-          <el-col :span="6">
-            <el-input
-                v-model="searchParams.deviceIdKeyword"
-                placeholder="设备ID"
-                clearable
-            />
-          </el-col>
-          <el-col :span="6">
-            <el-input
-                v-model="searchParams.responsiblePersonKeyword"
-                placeholder="负责人"
-                clearable
-            />
-          </el-col>
-          <el-col :span="6">
-            <el-input
-                v-model="searchParams.processTypeKeyword"
-                placeholder="工艺类型"
-                clearable
-            />
-          </el-col>
-          <el-col :span="6">
-            <el-input
-                v-model="searchParams.productionMachineKeyword"
-                placeholder="生产机器"
-                clearable
-            />
-          </el-col>
-        </el-row>
-        <el-row :gutter="16" style="margin-top: 16px">
-          <el-col :span="6">
-            <el-input
-                v-model="searchParams.scenarioCode"
-                placeholder="应用场景编号"
-                clearable
-            />
-          </el-col>
-          <el-col :span="6">
-            <el-input
-                v-model="searchParams.deviceCode"
-                placeholder="设备代码"
-                clearable
-            />
-          </el-col>
-          <el-col :span="6">
-            <el-select
-                v-model="searchParams.sortBy"
-                placeholder="排序字段"
-                style="width: 100%"
-            >
-              <el-option label="创建时间" value="createTime" />
-              <el-option label="检测时间" value="eventTime" />
-              <el-option label="批次号" value="batchNumber" />
-              <el-option label="直径" value="diameter" />
-              <el-option label="电导率" value="resistance" />
-              <el-option label="延展率" value="extensibility" />
-              <el-option label="重量" value="weight" />
-            </el-select>
-          </el-col>
-          <el-col :span="6">
-            <el-select
-                v-model="searchParams.sortDirection"
-                placeholder="排序方向"
-                style="width: 100%"
-            >
-              <el-option label="升序" value="asc" />
-              <el-option label="降序" value="desc" />
-            </el-select>
-          </el-col>
-        </el-row>
+      <el-collapse-item>
+        <template #title>
+          <div class="custom-collapse-title">
+            <el-icon><Filter /></el-icon>
+            <span>高级筛选</span>
+          </div>
+        </template>
+        <div class="advanced-search-content">
+          <el-row :gutter="16">
+            <el-col :span="6">
+              <el-input
+                  v-model="searchParams.deviceIdKeyword"
+                  placeholder="设备ID"
+                  clearable
+                  @keyup.enter="fetchWireMaterials"
+              />
+            </el-col>
+            <el-col :span="6">
+              <el-input
+                  v-model="searchParams.responsiblePersonKeyword"
+                  placeholder="负责人"
+                  clearable
+                  @keyup.enter="fetchWireMaterials"
+              />
+            </el-col>
+            <el-col :span="6">
+              <el-input
+                  v-model="searchParams.processTypeKeyword"
+                  placeholder="工艺类型"
+                  clearable
+                  @keyup.enter="fetchWireMaterials"
+              />
+            </el-col>
+            <el-col :span="6">
+              <el-input
+                  v-model="searchParams.productionMachineKeyword"
+                  placeholder="生产机器"
+                  clearable
+                  @keyup.enter="fetchWireMaterials"
+              />
+            </el-col>
+          </el-row>
+          <el-row :gutter="16" style="margin-top: 16px">
+            <el-col :span="6">
+              <el-input
+                  v-model="searchParams.scenarioCode"
+                  placeholder="应用场景编号"
+                  clearable
+                  @keyup.enter="fetchWireMaterials"
+              />
+            </el-col>
+            <el-col :span="6">
+              <el-input
+                  v-model="searchParams.deviceCode"
+                  placeholder="设备编号"
+                  clearable
+                  @keyup.enter="fetchWireMaterials"
+              />
+            </el-col>
+            <el-col :span="6">
+              <el-select
+                  v-model="searchParams.sortBy"
+                  placeholder="排序字段"
+                  style="width: 100%"
+              >
+                <el-option label="创建时间" value="createTime" />
+                <el-option label="检测时间" value="eventTime" />
+                <el-option label="批次号" value="batchNumber" />
+                <el-option label="直径" value="diameter" />
+                <el-option label="电导率" value="resistance" />
+                <el-option label="延展率" value="extensibility" />
+                <el-option label="重量" value="weight" />
+              </el-select>
+            </el-col>
+            <el-col :span="6">
+              <el-select
+                  v-model="searchParams.sortDirection"
+                  placeholder="排序方向"
+                  style="width: 100%"
+              >
+                <el-option label="升序" value="asc" />
+                <el-option label="降序" value="desc" />
+              </el-select>
+            </el-col>
+          </el-row>
+        </div>
       </el-collapse-item>
     </el-collapse>
 
@@ -129,10 +140,7 @@
         v-loading="loading"
         stripe
         style="width: 100%"
-        @selection-change="handleSelectionChange"
     >
-      <el-table-column type="selection" width="55" />
-
       <el-table-column prop="batchNumber" label="批次号" width="220">
         <template #default="{ row }">
           <el-tag size="small" type="info">{{ row.batchNumber }}</el-tag>
@@ -302,15 +310,6 @@
         <el-form-item label="联系邮箱" prop="contactEmail">
           <el-input v-model="editingWire.contactEmail" maxlength="100" />
         </el-form-item>
-
-        <!-- 新增设备信息编辑字段 -->
-        <el-form-item label="设备编号" prop="deviceCode">
-          <el-input v-model="editingWire.deviceCode" maxlength="50" />
-        </el-form-item>
-
-        <el-form-item label="应用场景编号" prop="scenarioCode">
-          <el-input v-model="editingWire.scenarioCode" maxlength="50" />
-        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -323,7 +322,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Search } from '@element-plus/icons-vue';
+import { Search, Filter } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import mwAPI from '@/api/mwManagement.js';
 import { useAuthStore } from '@/stores/auth';
@@ -336,7 +335,6 @@ const totalPages = ref(0);
 const totalElements = ref(0);
 const loading = ref(false);
 const advancedSearchActive = ref(false);
-const selectedBatchNumbers = ref([]);
 const editDialogVisible = ref(false);
 const editingWire = ref(null);
 
@@ -408,11 +406,6 @@ const resetSearch = () => {
 const handlePageChange = (page) => {
   currentPage.value = page;
   fetchWireMaterials();
-};
-
-// 表格选择处理
-const handleSelectionChange = (selection) => {
-  selectedBatchNumbers.value = selection.map(item => item.batchNumber);
 };
 
 // 打开编辑对话框
@@ -584,5 +577,18 @@ const formatDateTime = (dateString) => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* 自定义高级筛选标题样式 */
+.custom-collapse-title {
+  padding-left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 高级筛选内容区域样式 */
+.advanced-search-content {
+  padding: 0 20px 20px;
 }
 </style>

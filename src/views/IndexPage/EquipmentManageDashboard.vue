@@ -72,6 +72,15 @@
         </template>
       </el-table-column>
 
+      <!-- 新增设备编号列 -->
+      <el-table-column label="设备编号" min-width="120" align="center">
+        <template #default="{ row }">
+          <div class="device-code">
+            <span>{{ row.deviceCode || '--' }}</span>
+          </div>
+        </template>
+      </el-table-column>
+
       <el-table-column label="状态" width="120" align="center">
         <template #default="{ row }">
           <el-progress
@@ -162,10 +171,10 @@
     <el-dialog
         v-model="createDialogVisible"
         title="创建设备"
-        width="400px"
+        width="500px"
     >
-      <el-form :model="createForm" label-width="80px">
-        <el-form-item label="设备ID" required>
+      <el-form :model="createForm" label-width="90px" :rules="createRules" ref="createFormRef">
+        <el-form-item label="设备ID" prop="deviceId">
           <div class="device-id-input">
             <el-input
                 v-model="createForm.deviceId"
@@ -182,13 +191,26 @@
           </div>
           <p class="form-tip">只能包含字母、数字、下划线和连字符</p>
         </el-form-item>
+
+        <!-- 新增设备编号输入 -->
+        <el-form-item label="设备编号" prop="deviceCode">
+          <div class="device-code-input">
+            <el-input
+                v-model="createForm.deviceCode"
+                placeholder="输入两位数字编号"
+                maxlength="2"
+                clearable
+            />
+          </div>
+          <p class="form-tip">必须是两位数字，如05、12、99</p>
+        </el-form-item>
       </el-form>
 
       <template #footer>
         <el-button @click="createDialogVisible = false">取消</el-button>
         <el-button
             type="primary"
-            @click="createDevice"
+            @click="submitCreateForm"
             :loading="creating"
         >
           创建
@@ -206,6 +228,12 @@
         <div class="detail-row">
           <div class="detail-label">设备ID:</div>
           <div class="detail-value">{{ currentDevice.deviceId }}</div>
+        </div>
+
+        <!-- 新增设备编号显示 -->
+        <div class="detail-row">
+          <div class="detail-label">设备编号:</div>
+          <div class="detail-value">{{ currentDevice.deviceCode || '--' }}</div>
         </div>
 
         <div class="detail-row">
@@ -279,13 +307,29 @@ const totalElements = ref(0)
 const statusFilter = ref('ALL')
 const loading = ref(false)
 const createDialogVisible = ref(false)
-const createForm = ref({ deviceId: '' })
+const createForm = ref({
+  deviceId: '',
+  deviceCode: ''
+})
+const createFormRef = ref(null)
 const creating = ref(false)
 const detailDialogVisible = ref(false)
 const currentDevice = ref(null)
 const connectionTestResult = ref(false)
 const connectionTestMessage = ref('')
 const testingDeviceId = ref(false)
+
+// 创建设备表单验证规则
+const createRules = {
+  deviceId: [
+    { required: true, message: '请输入设备ID', trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9_-]+$/, message: '只能包含字母、数字、下划线和连字符', trigger: 'blur' }
+  ],
+  deviceCode: [
+    { required: true, message: '请输入设备编号', trigger: 'blur' },
+    { pattern: /^\d{2}$/, message: '必须是两位数字', trigger: 'blur' }
+  ]
+}
 
 // 权限检查
 const authStore = useAuthStore()
@@ -346,20 +390,36 @@ const handleSizeChange = (size) => {
 
 // 打开创建设备对话框
 const openCreateDialog = () => {
-  createForm.value.deviceId = ''
+  createForm.value = {
+    deviceId: '',
+    deviceCode: ''
+  }
+  if (createFormRef.value) {
+    createFormRef.value.resetFields()
+  }
   createDialogVisible.value = true
+}
+
+// 提交创建设备表单
+const submitCreateForm = () => {
+  if (!createFormRef.value) return
+  createFormRef.value.validate(valid => {
+    if (valid) {
+      createDevice()
+    } else {
+      ElMessage.warning('请正确填写表单')
+    }
+  })
 }
 
 // 创建设备
 const createDevice = async () => {
-  if (!createForm.value.deviceId) {
-    ElMessage.warning('请输入设备ID')
-    return
-  }
-
   creating.value = true
   try {
-    const response = await adminAPI.createDevice(createForm.value.deviceId)
+    const response = await adminAPI.createDevice(
+        createForm.value.deviceId,
+        createForm.value.deviceCode
+    )
     if (response.code === 'success') {
       ElMessage.success(`设备 ${createForm.value.deviceId} 创建成功`)
       createDialogVisible.value = false
@@ -621,6 +681,17 @@ const formatDate = (dateString) => {
   color: #409eff;
 }
 
+/* 设备编号样式 */
+.device-code {
+  font-weight: 500;
+  color: #1a3a6e;
+  font-size: 16px;
+  background: #f0f7ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
 .time-info {
   display: flex;
   align-items: center;
@@ -693,6 +764,11 @@ const formatDate = (dateString) => {
   min-width: 100px;
 }
 
+/* 设备编号输入框样式 */
+.device-code-input {
+  max-width: 200px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .action-bar {
@@ -716,6 +792,11 @@ const formatDate = (dateString) => {
   .header-stats {
     width: 100%;
     justify-content: space-between;
+  }
+
+  /* 移动端调整设备编号输入框宽度 */
+  .device-code-input {
+    max-width: 100%;
   }
 }
 </style>

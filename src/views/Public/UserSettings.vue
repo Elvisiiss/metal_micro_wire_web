@@ -28,7 +28,7 @@
             </div>
             <div class="avatar-info">
               <p class="username">{{ user.username }}</p>
-              <p class="user-role">{{ user.role }}</p>
+              <p class="user-role">{{ authStore.user?.role_id === 1 ? '管理员' : '普通用户' }}</p>
             </div>
           </div>
 
@@ -59,14 +59,7 @@
               <h4>密码</h4>
               <p>定期更改密码以确保账号安全</p>
             </div>
-            <button class="security-btn" @click="showPasswordModal = true">更改密码</button>
-          </div>
-          <div class="security-item">
-            <div class="security-info">
-              <h4>双重认证</h4>
-              <p>为您的账号增加额外的安全保护</p>
-            </div>
-            <el-switch v-model="user.twoFactorAuth" active-color="#13ce66"></el-switch>
+            <button class="security-btn" @click="openPasswordModal">更改密码</button>
           </div>
         </div>
       </div>
@@ -76,16 +69,39 @@
     <el-dialog v-model="showPasswordModal" title="修改密码" width="30%">
       <div class="password-form">
         <div class="form-group">
-          <label>当前密码</label>
-          <el-input type="password" v-model="password.current" show-password></el-input>
+          <label>邮箱</label>
+          <el-input v-model="password.email" disabled></el-input>
+        </div>
+        <div class="form-group">
+          <label>验证码</label>
+          <div class="code-input-group">
+            <el-input v-model="password.code" placeholder="请输入验证码"></el-input>
+            <el-button
+                :disabled="codeButtonDisabled"
+                @click="sendResetCode"
+                class="code-button"
+            >
+              {{ codeButtonText }}
+            </el-button>
+          </div>
         </div>
         <div class="form-group">
           <label>新密码</label>
-          <el-input type="password" v-model="password.new" show-password></el-input>
+          <el-input
+              type="password"
+              v-model="password.new"
+              show-password
+              placeholder="请输入新密码"
+          ></el-input>
         </div>
         <div class="form-group">
           <label>确认新密码</label>
-          <el-input type="password" v-model="password.confirm" show-password></el-input>
+          <el-input
+              type="password"
+              v-model="password.confirm"
+              show-password
+              placeholder="请再次输入新密码"
+          ></el-input>
         </div>
       </div>
       <template #footer>
@@ -99,28 +115,34 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, computed, onBeforeUnmount} from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
+import api from '@/api/auth.js'
 
 const authStore = useAuthStore()
 
 // 用户数据
 const user = ref({
-  username: '张工',
-  email: 'zhang.gong@example.com',
-  role: '管理员',
-  avatar: 'https://thirdwx.qlogo.cn/mmopen/vi_32/hQoOP719jarWIicoBGJoqLkju7oicBOtuZempcjbzQXibqnIWWF1BnTHfiaQujUHTSR4ocWz66c9CqcRl7ic8BbAg9Vt6j0TBIfyQib39ibCnKtxvQ/132',
-  twoFactorAuth: false
+  username: '用户名',
+  email: '用户邮箱',
+  avatar: 'http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12'
 })
 
 // 密码修改相关
 const showPasswordModal = ref(false)
 const password = ref({
-  current: '',
+  email: '',
+  code: '',
   new: '',
   confirm: ''
 })
+
+// 验证码相关
+const codeButtonDisabled = ref(false)
+const codeButtonText = ref('获取验证码')
+let countdown = 60
+let countdownTimer = null
 
 const avatarInput = ref(null)
 
@@ -129,8 +151,21 @@ onMounted(() => {
   if (authStore.user) {
     user.value.username = authStore.user.user_name || 'error'
     user.value.email = authStore.user.e_mail || 'error'
+    password.value.email = authStore.user.e_mail || 'error'
   }
 })
+
+// 打开密码修改模态框
+const openPasswordModal = () => {
+  // 重置表单
+  password.value = {
+    email: authStore.user.e_mail || '',
+    code: '',
+    new: '',
+    confirm: ''
+  }
+  showPasswordModal.value = true
+}
 
 // 触发头像上传
 const triggerAvatarUpload = () => {
@@ -154,7 +189,10 @@ const handleAvatarUpload = (event) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       user.value.avatar = e.target.result
-      ElMessage.success('头像更新成功')
+      ElMessage.success({
+        message: '头像更新成功',
+        zIndex: 3001  // 确保提示在悬浮窗之上
+      })
     }
     reader.readAsDataURL(file)
   }
@@ -163,31 +201,123 @@ const handleAvatarUpload = (event) => {
 // 保存基本信息
 const saveBasicInfo = () => {
   // 这里应该添加表单验证逻辑
-  ElMessage.success('基本信息已保存')
+  ElMessage.success({
+    message: '基本信息已保存',
+    zIndex: 3001  // 确保提示在悬浮窗之上
+  })
+}
+
+// 发送验证码
+const sendResetCode = async () => {
+  try {
+    const response = await api.sendResetPasswordCode(password.value.email)
+    if (response.code === 'success') {
+      startCountdown()
+      ElMessage.success({
+        message: '验证码已发送，请查收邮箱',
+        zIndex: 3001
+      })
+    } else {
+      ElMessage.error({
+        message: response.msg || '发送验证码失败',
+        zIndex: 3001
+      })
+    }
+  } catch (err) {
+    ElMessage.error({
+      message: '发送验证码失败，请稍后再试',
+      zIndex: 3001
+    })
+  }
+}
+
+// 开始倒计时
+const startCountdown = () => {
+  codeButtonDisabled.value = true
+  codeButtonText.value = `${countdown}秒后重试`
+
+  countdownTimer = setInterval(() => {
+    countdown--
+    codeButtonText.value = `${countdown}秒后重试`
+
+    if (countdown <= 0) {
+      clearInterval(countdownTimer)
+      codeButtonText.value = '获取验证码'
+      codeButtonDisabled.value = false
+      countdown = 60
+    }
+  }, 1000)
 }
 
 // 修改密码
-const changePassword = () => {
-  if (!password.value.current || !password.value.new) {
-    ElMessage.error('请填写完整密码信息')
+const changePassword = async () => {
+  // 表单验证
+  if (!password.value.code) {
+    ElMessage.error({
+      message: '请输入验证码',
+      zIndex: 3001
+    })
+    return
+  }
+
+  if (!password.value.new || !password.value.confirm) {
+    ElMessage.error({
+      message: '请输入新密码',
+      zIndex: 3001
+    })
     return
   }
 
   if (password.value.new !== password.value.confirm) {
-    ElMessage.error('两次输入的新密码不一致')
+    ElMessage.error({
+      message: '两次输入的新密码不一致',
+      zIndex: 3001
+    })
     return
   }
 
   if (password.value.new.length < 6) {
-    ElMessage.error('密码长度不能少于6位')
+    ElMessage.error({
+      message: '密码长度不能少于6位',
+      zIndex: 3001
+    })
     return
   }
 
-  // 这里应该调用API修改密码
-  ElMessage.success('密码修改成功')
-  showPasswordModal.value = false
-  password.value = { current: '', new: '', confirm: '' }
+  try {
+    // 调用API修改密码
+    const response = await api.resetPassword(
+        password.value.email,
+        password.value.new,
+        password.value.code
+    )
+
+    if (response.code === 'success') {
+      ElMessage.success({
+        message: '密码修改成功',
+        zIndex: 3001
+      })
+      showPasswordModal.value = false
+    } else {
+      ElMessage.error({
+        message: response.msg || '密码修改失败',
+        zIndex: 3001
+      })
+    }
+  } catch (error) {
+    ElMessage.error({
+      message: '密码修改失败，请稍后再试',
+      zIndex: 3001
+    })
+  }
 }
+
+// 组件卸载时清除定时器
+onBeforeUnmount(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
+})
 </script>
 
 <style scoped>
@@ -390,6 +520,15 @@ const changePassword = () => {
   margin-bottom: 8px;
   font-size: 14px;
   color: #666;
+}
+
+.code-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.code-button {
+  white-space: nowrap;
 }
 
 .icon-camera::before {
