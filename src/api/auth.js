@@ -70,15 +70,16 @@ export default {
     },
 
     // 登录相关
-    async loginWithUsername(account, password) {
+    async loginWithUsername(account, password, remember = false) {
         try {
             const response = await auth.post('/login/password', {
                 msg: "密码登录",
-                status: 0,
                 account: account,
-                passwd: password
+                passwd: password,
+                remember: remember
             });
-            // 登录成功可以在这里保存用户信息
+
+            // 登录成功处理
             if (response.data.code === "success") {
                 localStorage.setItem('userInfo', JSON.stringify({
                     email: response.data.e_mail,
@@ -106,14 +107,16 @@ export default {
         }
     },
 
-    async loginWithCode(email, code) {
+    async loginWithCode(email, code, remember = false) {
         try {
             const response = await auth.post('/login/verify-code', {
                 msg: "登录邮箱验证码",
                 e_mail: email,
-                mail_code: code
+                mail_code: code,
+                remember: remember // 添加remember参数
             });
-            // 登录成功可以在这里保存用户信息
+
+            // 登录成功处理
             if (response.data.code === "success") {
                 localStorage.setItem('userInfo', JSON.stringify({
                     email: response.data.e_mail,
@@ -143,13 +146,13 @@ export default {
         }
     },
 
-    async loginWithRoot(userName, password) {
+    async loginWithRoot(userName, password,remember) {
         try {
             const response = await auth.post('/root/login', {
                 msg: "ROOT用户登录",
-                status: 0,
                 userName: userName,
-                password: password
+                password: password,
+                remember: remember // 添加remember参数
             });
             // 登录成功可以在这里保存用户信息
             if (response.data.code === "success") {

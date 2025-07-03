@@ -13,7 +13,7 @@
           <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
           <li :class="{active: activeTab === 'mwManagement'}"><a @click="setActiveTab('mwManagement')">检测管理</a></li>
           <li><a>数据分析</a></li>
-          <li><a>系统设置</a></li>
+          <li :class="{active: activeTab === 'SystemConfig'}"><a @click="setActiveTab('SystemConfig')">系统设置</a></li>
           <li :class="{active: activeTab === 'equipmentManage'}"><a @click="setActiveTab('equipmentManage')">设备管理</a></li>
           <li :class="{active: activeTab === 'ApplicationScenario'}"><a @click="setActiveTab('ApplicationScenario')">应用场景管理</a></li>
         </ul>
@@ -78,6 +78,9 @@
 
       <!-- 线材管理-->
       <mwManagement v-if="activeTab === 'mwManagement'"/>
+
+      <!-- 系统设置-->
+      <SystemConfig v-if="activeTab === 'SystemConfig'"/>
     </main>
     <!-- 账号信息悬浮窗 -->
     <transition name="slide-fade">
@@ -108,6 +111,7 @@ import UserSettings from '../Public/UserSettings.vue'; // 导入UserSettings组�
 import EquipmentManageDashboard from "@/views/IndexPage/EquipmentManageDashboard.vue";
 import ApplicationScenario from './ApplicationScenario.vue'
 import mwManagement from './mwManagement.vue'
+import SystemConfig from "@/views/IndexPage/SystemConfig.vue";
 import AuthAPI from '@/api/auth.js'
 
 import { useRouter } from 'vue-router';

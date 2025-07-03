@@ -1,72 +1,106 @@
 <template>
-  <div class="questionnaire">
-    <h1>用户满意度调查</h1>
-    <p class="description">感谢您使用金属微细线材综合检测平台，您的反馈将帮助我们改进产品和服务。</p>
+  <div class="questionnaire-container">
+    <div class="page-header-custom">
+      <div class="header-content">
+        <span class="page-title">用户满意度调查</span>
+        <span class="page-subtitle">您的反馈将帮助我们改进产品和服务</span>
+      </div>
+      <div class="header-stats">
+        <el-tag>问题: {{ totalQuestions }} 个</el-tag>
+        <el-tag v-if="answeredQuestions > 0" type="success">已完成: {{ answeredQuestions }}</el-tag>
+      </div>
+    </div>
 
-    <form @submit.prevent="submitQuestionnaire">
-      <div class="form-section" v-for="(section, index) in questionnaire" :key="index">
-        <h3>{{ section.title }}</h3>
+    <div class="survey-content">
+      <div v-if="!submitSuccess">
+        <div class="form-section" v-for="(section, index) in questionnaire" :key="index">
+          <div class="section-header">
+            <el-icon><Folder /></el-icon>
+            <h3>{{ section.title }}</h3>
+          </div>
 
-        <div class="question" v-for="question in section.questions" :key="question.id">
-          <p class="question-text">{{ question.text }}</p>
+          <div class="question" v-for="question in section.questions" :key="question.id">
+            <div class="question-header">
+              <p class="question-text">{{ question.text }}</p>
+              <el-tag v-if="question.required" type="danger" size="small">必填</el-tag>
+            </div>
 
-          <div v-if="question.type === 'rating'" class="rating-options">
-            <label v-for="i in 5" :key="i">
-              <input
-                  type="radio"
-                  :name="question.id"
-                  :value="i"
+            <div v-if="question.type === 'rating'" class="rating-options">
+              <div class="rating-scale">
+                <div class="rating-item" v-for="i in 5" :key="i">
+                  <el-radio
+                      :name="question.id"
+                      :value="i"
+                      v-model="answers[question.id]"
+                      :label="i"
+                  />
+                  <span class="rating-label">{{ i }}</span>
+                </div>
+              </div>
+              <div class="rating-labels">
+                <span>非常不满意</span>
+                <span>非常满意</span>
+              </div>
+            </div>
+
+            <div v-else-if="question.type === 'multiple-choice'" class="multiple-choice">
+              <el-checkbox-group v-model="answers[question.id]">
+                <el-checkbox
+                    v-for="option in question.options"
+                    :key="option"
+                    :label="option"
+                    class="choice-item"
+                >
+                  {{ option }}
+                </el-checkbox>
+              </el-checkbox-group>
+            </div>
+
+            <div v-else-if="question.type === 'text'" class="text-answer">
+              <el-input
                   v-model="answers[question.id]"
-                  required
+                  type="textarea"
+                  :placeholder="question.placeholder || '请输入您的回答...'"
+                  :rows="4"
               />
-              {{ i }}
-            </label>
-            <div class="rating-labels">
-              <span>非常不满意</span>
-              <span>非常满意</span>
             </div>
           </div>
+        </div>
 
-          <div v-else-if="question.type === 'multiple-choice'" class="multiple-choice">
-            <label v-for="option in question.options" :key="option">
-              <input
-                  type="checkbox"
-                  :name="question.id"
-                  :value="option"
-                  v-model="answers[question.id]"
-              />
-              {{ option }}
-            </label>
-          </div>
-
-          <div v-else-if="question.type === 'text'" class="text-answer">
-            <textarea
-                v-model="answers[question.id]"
-                :placeholder="question.placeholder || '请输入您的回答...'"
-                :required="question.required"
-            ></textarea>
-          </div>
+        <div class="submit-section">
+          <el-button
+              type="primary"
+              size="large"
+              @click="submitQuestionnaire"
+              :loading="isSubmitting"
+              :disabled="isSubmitting"
+          >
+            {{ isSubmitting ? '提交中...' : '提交问卷' }}
+          </el-button>
         </div>
       </div>
 
-      <div class="submit-section">
-        <button type="submit" :disabled="isSubmitting">
-          {{ isSubmitting ? '提交中...' : '提交问卷' }}
-        </button>
+      <div v-else class="success-message">
+        <el-result
+            icon="success"
+            title="感谢您的参与！"
+            sub-title="您的反馈对我们非常重要，我们将根据您的建议不断改进"
+        >
+          <template #extra>
+            <el-button type="primary" @click="resetQuestionnaire">返回首页</el-button>
+            <el-button @click="resetQuestionnaire">填写另一份问卷</el-button>
+          </template>
+        </el-result>
       </div>
-    </form>
-
-    <div v-if="submitSuccess" class="success-message">
-      <h3>感谢您的参与！</h3>
-      <p>您的反馈对我们非常重要，我们将根据您的建议不断改进我们的产品和服务。</p>
-      <button @click="resetQuestionnaire">填写另一份问卷</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { Folder } from '@element-plus/icons-vue'
 
+// 问卷调查数据
 const questionnaire = ref([
   {
     title: '平台使用体验',
@@ -82,11 +116,11 @@ const questionnaire = ref([
         text: '您最常使用的功能有哪些？',
         type: 'multiple-choice',
         options: [
-          '线径测量',
-          '拉伸强度检测',
-          '电导率测量',
-          '单位重量测量',
-          '数据查询'
+          '线材检测数据管理',
+          '设备状态监控',
+          '数据统计分析',
+          '应用场景配置',
+          '用户权限管理'
         ]
       },
       {
@@ -114,7 +148,8 @@ const questionnaire = ref([
           '线径测量精度',
           '拉伸强度检测',
           '电导率测量',
-          '单位重量测量'
+          '单位重量测量',
+          '设备状态报告'
         ]
       }
     ]
@@ -137,11 +172,24 @@ const questionnaire = ref([
   }
 ])
 
+// 响应式状态
 const answers = ref({})
 const isSubmitting = ref(false)
 const submitSuccess = ref(false)
 
-// 初始化答案对象
+// 计算属性
+const totalQuestions = computed(() => {
+  return questionnaire.value.reduce((total, section) => total + section.questions.length, 0)
+})
+
+const answeredQuestions = computed(() => {
+  return Object.values(answers.value).filter(val => {
+    if (Array.isArray(val)) return val.length > 0
+    return val !== '' && val !== null
+  }).length
+})
+
+// 初始化方法
 const initAnswers = () => {
   answers.value = {}
   questionnaire.value.forEach(section => {
@@ -155,18 +203,31 @@ const initAnswers = () => {
   })
 }
 
-initAnswers()
-
+// 问卷调查方法
 const submitQuestionnaire = async () => {
+  // 检查必填项
+  const requiredQuestions = questionnaire.value.flatMap(section =>
+      section.questions.filter(q => q.required))
+
+  const missingRequired = requiredQuestions.some(q => {
+    const answer = answers.value[q.id]
+    return Array.isArray(answer) ? answer.length === 0 : !answer
+  })
+
+  if (missingRequired) {
+    ElMessage.error('请填写所有必填问题')
+    return
+  }
+
   isSubmitting.value = true
   try {
     // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1500))
     console.log('提交的问卷数据:', answers.value)
     submitSuccess.value = true
   } catch (error) {
     console.error('提交问卷失败:', error)
-    alert('提交失败，请稍后重试')
+    ElMessage.error('提交失败，请稍后重试')
   } finally {
     isSubmitting.value = false
   }
@@ -176,82 +237,152 @@ const resetQuestionnaire = () => {
   submitSuccess.value = false
   initAnswers()
 }
+
+// 初始化
+initAnswers()
 </script>
 
 <style scoped>
-.questionnaire {
-  max-width: 800px;
+.questionnaire-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 20px;
 }
 
-.description {
-  color: #666;
-  margin-bottom: 30px;
+.page-header-custom {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f8faff, #e6f0ff);
+  border-bottom: 1px solid #e6f0ff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a3a6e;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #5b7ba8;
+}
+
+.header-stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.survey-content {
+  padding: 24px;
 }
 
 .form-section {
   margin-bottom: 30px;
   padding: 20px;
-  background: #f9f9f9;
-  border-radius: 8px;
+  background: #f8faff;
+  border-radius: 10px;
+  border: 1px solid #e6f0ff;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e6f0ff;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #1a3a6e;
+}
+
+.section-header .el-icon {
+  color: #409eff;
 }
 
 .question {
   margin-bottom: 25px;
+  padding: 15px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e6f0ff;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
 .question-text {
   font-weight: 500;
-  margin-bottom: 10px;
+  margin: 0;
+  color: #1a3a6e;
 }
 
 .rating-options {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+  padding: 10px 0;
 }
 
-.rating-options label {
+.rating-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.rating-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: pointer;
+  gap: 8px;
 }
 
-.rating-options input[type="radio"] {
-  margin-bottom: 5px;
+.rating-label {
+  font-size: 14px;
+  color: #5b7ba8;
 }
 
 .rating-labels {
-  width: 100%;
   display: flex;
   justify-content: space-between;
-  margin-top: 5px;
-  font-size: 0.8em;
-  color: #666;
+  font-size: 12px;
+  color: #888;
+  padding: 0 10px;
 }
 
 .multiple-choice {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  padding: 10px 0;
 }
 
-.multiple-choice label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+.choice-item {
+  margin-right: 0;
+  padding: 8px 12px;
+  background: #f8faff;
+  border-radius: 6px;
+  border: 1px solid #e6f0ff;
 }
 
-.text-answer textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
+.text-answer {
+  padding: 10px 0;
 }
 
 .submit-section {
@@ -259,45 +390,25 @@ const resetQuestionnaire = () => {
   margin-top: 30px;
 }
 
-.submit-section button {
-  padding: 12px 25px;
-  background-color: #42b983;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.submit-section button:hover {
-  background-color: #3aa876;
-}
-
-.submit-section button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
 .success-message {
   text-align: center;
-  padding: 30px;
-  background: #f0f9f0;
-  border-radius: 8px;
-  margin-top: 20px;
+  padding: 40px 20px;
 }
 
-.success-message h3 {
-  color: #42b983;
-  margin-bottom: 15px;
-}
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .page-header-custom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 
-.success-message button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #ddd;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  .header-stats {
+    align-self: flex-end;
+  }
+
+  .multiple-choice {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

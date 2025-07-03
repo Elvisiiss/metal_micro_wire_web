@@ -128,6 +128,17 @@
             </div>
           </div>
 
+          <!-- 添加记住我选框 -->
+          <div class="remember-me">
+            <input
+                type="checkbox"
+                id="rememberAccount"
+                v-model="accountForm.remember"
+                class="remember-checkbox"
+            >
+            <label for="rememberAccount">记住我</label>
+          </div>
+
           <button type="submit" class="submit-button" :disabled="loading">
             <svg v-if="loading" class="loading-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
@@ -178,6 +189,17 @@
                 {{ codeButtonText }}
               </button>
             </div>
+          </div>
+
+          <!-- 添加记住我选框 -->
+          <div class="remember-me">
+            <input
+                type="checkbox"
+                id="rememberCode"
+                v-model="codeForm.remember"
+                class="remember-checkbox"
+            >
+            <label for="rememberCode">记住我</label>
           </div>
 
           <button type="submit" class="submit-button" :disabled="loading">
@@ -238,6 +260,17 @@
                 </svg>
               </button>
             </div>
+          </div>
+
+          <!-- 添加记住我选框 -->
+          <div class="remember-me">
+            <input
+                type="checkbox"
+                id="rememberCode"
+                v-model="rootForm.remember"
+                class="remember-checkbox"
+            >
+            <label for="rememberCode">记住我</label>
           </div>
 
           <button type="submit" class="submit-button" :disabled="loading">
@@ -308,17 +341,20 @@ const isRootLogin = ref(false);
 
 const accountForm = ref({
   account: '',
-  password: ''
+  password: '',
+  remember: false
 });
 
 const codeForm = ref({
   email: '',
-  code: ''
+  code: '',
+  remember: false
 });
 
 const rootForm = ref({
   username: '',
-  password: ''
+  password: '',
+  remember: false
 });
 
 const loading = ref(false);
@@ -399,11 +435,12 @@ const handleAccountLogin = async () => {
     loading.value = true;
     error.value = '';
 
-    let response;
-    response = await api.loginWithUsername(
+    // 调用API登录
+    const response = await api.loginWithUsername(
         accountForm.value.account,
-        accountForm.value.password
-    )
+        accountForm.value.password,
+        accountForm.value.remember // 添加remember参数
+    );
 
     if (response.code === 'success') {
       authStore.setUser(response)
@@ -423,9 +460,11 @@ const handleCodeLogin = async () => {
     loading.value = true;
     error.value = '';
 
+    // 调用API登录
     const response = await api.loginWithCode(
         codeForm.value.email,
-        codeForm.value.code
+        codeForm.value.code,
+        codeForm.value.remember // 添加remember参数
     );
 
     if (response.code === 'success') {
@@ -449,7 +488,8 @@ const handleRootLogin = async () => {
 
     const response = await api.loginWithRoot(
         rootForm.value.username,
-        rootForm.value.password
+        rootForm.value.password,
+        rootForm.value.remember
     );
 
     if (response.code === 'success') {
@@ -1079,5 +1119,25 @@ input[type="password"] {
     padding: 8px 12px;
     font-size: 0.8rem;
   }
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.remember-checkbox {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  accent-color: #667eea; /* 使用主题色 */
+  cursor: pointer;
+}
+
+.remember-me label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  cursor: pointer;
 }
 </style>
