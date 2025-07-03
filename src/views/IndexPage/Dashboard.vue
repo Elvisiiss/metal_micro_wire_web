@@ -11,7 +11,7 @@
           <li :class="{active: activeTab === 'dashboard'}"><a @click="setActiveTab('dashboard')">仪表盘</a></li>
           <li :class="{active: activeTab === 'dataScreen'}"><a @click="setActiveTab('dataScreen')">数据大屏</a></li>
           <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
-          <li><a>检测管理</a></li>
+          <li :class="{active: activeTab === 'mwManagement'}"><a @click="setActiveTab('mwManagement')">检测管理</a></li>
           <li><a>数据分析</a></li>
           <li><a>系统设置</a></li>
           <li :class="{active: activeTab === 'equipmentManage'}"><a @click="setActiveTab('equipmentManage')">设备管理</a></li>
@@ -73,8 +73,11 @@
       <!-- 设备管理-->
       <EquipmentManageDashboard v-if="activeTab === 'equipmentManage'"/>
 
-      <!-- 设备管理-->
+      <!-- 应用场景管理-->
       <ApplicationScenario v-if="activeTab === 'ApplicationScenario'"/>
+
+      <!-- 线材管理-->
+      <mwManagement v-if="activeTab === 'mwManagement'"/>
     </main>
     <!-- 账号信息悬浮窗 -->
     <transition name="slide-fade">
@@ -104,6 +107,7 @@ import ChatView from './ChatView.vue';
 import UserSettings from '../Public/UserSettings.vue'; // 导入UserSettings组件
 import EquipmentManageDashboard from "@/views/IndexPage/EquipmentManageDashboard.vue";
 import ApplicationScenario from './ApplicationScenario.vue'
+import mwManagement from './mwManagement.vue'
 import AuthAPI from '@/api/auth.js'
 
 import { useRouter } from 'vue-router';
