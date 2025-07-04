@@ -44,6 +44,16 @@
         </div>
 
         <div class="health-item">
+          <div class="health-label">模型状态</div>
+          <el-tag
+              :type="healthStatus.ml_model.includes('connected') ? 'success' : 'danger'"
+              effect="dark"
+          >
+            {{ healthStatus.ml_model }}
+          </el-tag>
+        </div>
+
+        <div class="health-item">
           <div class="health-label">服务状态</div>
           <el-tag
               type="info"
@@ -180,7 +190,8 @@ const listenerStatus = ref({
 const healthStatus = ref({
   database: 'unknown',
   redis: 'unknown',
-  service: 'unknown'
+  service: 'unknown',
+  ml_model: 'unknown'
 });
 
 // 加载状态

@@ -10,11 +10,12 @@
         <ul class="nav-menu">
           <li :class="{active: activeTab === 'dashboard'}"><a @click="setActiveTab('dashboard')">仪表盘</a></li>
           <li :class="{active: activeTab === 'dataScreen'}"><a @click="setActiveTab('dataScreen')">数据大屏</a></li>
-          <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
-          <li :class="{active: activeTab === 'mwManagement'}"><a @click="setActiveTab('mwManagement')">检测管理</a></li>
-          <li :class="{active: activeTab === 'DataAnalysis'}"><a @click="setActiveTab('DataAnalysis')">数据分析</a></li>
           <li :class="{active: activeTab === 'equipmentManage'}"><a @click="setActiveTab('equipmentManage')">设备管理</a></li>
           <li :class="{active: activeTab === 'ApplicationScenario'}"><a @click="setActiveTab('ApplicationScenario')">应用场景管理</a></li>
+          <li :class="{active: activeTab === 'mwManagement'}"><a @click="setActiveTab('mwManagement')">检测管理</a></li>
+          <li :class="{active: activeTab === 'QualityEvaluation'}"><a @click="setActiveTab('QualityEvaluation')">质量评估</a></li>
+          <li :class="{active: activeTab === 'DataAnalysis'}"><a @click="setActiveTab('DataAnalysis')">数据分析</a></li>
+          <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
         </ul>
       </div>
       <div class="navbar-right">
@@ -82,6 +83,9 @@
 
       <!-- 数据分析-->
       <Helps v-if="activeTab === 'Helps'"/>
+
+      <!-- 质量评估-->
+      <QualityEvaluation v-if="activeTab === 'QualityEvaluation'"/>
     </main>
     <!-- 账号信息悬浮窗 -->
     <transition name="slide-fade">
@@ -111,6 +115,7 @@ import ChatView from './ChatView.vue';
 import UserSettings from '../Public/UserSettings.vue'; // 导入UserSettings组件
 import EquipmentManageDashboard from "@/views/IndexPage/EquipmentManageDashboard.vue";
 import ApplicationScenario from './ApplicationScenario.vue'
+import QualityEvaluation from './QualityEvaluation.vue'
 import mwManagement from './mwManagement.vue'
 import SystemConfig from "@/views/IndexPage/SystemConfig.vue";
 import AuthAPI from '@/api/auth.js'

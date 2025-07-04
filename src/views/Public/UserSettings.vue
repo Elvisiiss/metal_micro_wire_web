@@ -35,11 +35,11 @@
           <div class="info-form">
             <div class="form-group">
               <label>用户名</label>
-              <input type="text" v-model="user.username" disabled>
+              <input type="text" v-model="user.username">
             </div>
             <div class="form-group">
               <label>邮箱</label>
-              <input type="email" v-model="user.email">
+              <input type="email" v-model="user.email" disabled>
             </div>
           </div>
         </div>

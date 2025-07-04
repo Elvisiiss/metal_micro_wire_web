@@ -92,5 +92,16 @@ export default {
             console.error('删除应用场景失败', error.response?.data);
             throw error;
         }
+    },
+
+    // 新增：重新评估应用场景下的所有线材数据
+    async reEvaluateScenario(scenarioCode) {
+        try {
+            const response = await auth.post(`/${scenarioCode}/re-evaluate`);
+            return response.data;
+        } catch (error) {
+            console.error('重新评估失败', error.response?.data);
+            throw error;
+        }
     }
 };

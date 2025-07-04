@@ -160,10 +160,10 @@
       <el-table-column label="技术参数" width="250">
         <template #default="{ row }">
           <div class="tech-params">
-            <div><span class="param-label">直径:</span> {{ row.diameter }} mm</div>
-            <div><span class="param-label">电导率:</span> {{ row.resistance }}</div>
-            <div><span class="param-label">延展率:</span> {{ row.extensibility }}%</div>
-            <div><span class="param-label">重量:</span> {{ row.weight }} g</div>
+            <div><span class="param-label">直径:</span> {{ formatNumber(row.diameter, 'diameter') }} mm</div>
+            <div><span class="param-label">电导率:</span> {{ formatNumber(row.resistance, 'conductivity') }} MS/m</div>
+            <div><span class="param-label">延展率:</span> {{ formatNumber(row.extensibility, 'extensibility') }} δ</div>
+            <div><span class="param-label">重量:</span> {{ formatNumber(row.weight, 'weight') }} g</div>
           </div>
         </template>
       </el-table-column>
@@ -178,6 +178,20 @@
             <div><span class="info-label">工艺:</span> {{ row.processType }}</div>
             <div><span class="info-label">机器:</span> {{ row.productionMachine }}</div>
           </div>
+        </template>
+      </el-table-column>
+
+      <!-- 新增：最终评估结果列 -->
+      <el-table-column label="最终评估结果" width="140" align="center">
+        <template #default="{ row }">
+          <el-tooltip :content="row.evaluationMessage" placement="top" effect="light">
+            <el-tag
+                :type="row.finalEvaluationResult === 'PASS' ? 'success' : 'danger'"
+                effect="dark"
+            >
+              {{ row.finalEvaluationResult === 'PASS' ? '通过' : '失败' }}
+            </el-tag>
+          </el-tooltip>
         </template>
       </el-table-column>
 
@@ -252,16 +266,18 @@
                   v-model="editingWire.diameter"
                   :min="0"
                   :step="0.01"
+                  :precision="2"
                   controls-position="right"
               />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="电导率" prop="resistance">
+            <el-form-item label="电导率 (MS/m)" prop="resistance">
               <el-input-number
                   v-model="editingWire.resistance"
                   :min="0"
                   :step="0.1"
+                  :precision="2"
                   controls-position="right"
               />
             </el-form-item>
@@ -270,11 +286,12 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="延展率 (%)" prop="extensibility">
+            <el-form-item label="延展率 (δ)" prop="extensibility">
               <el-input-number
                   v-model="editingWire.extensibility"
                   :min="0"
                   :step="0.1"
+                  :precision="1"
                   controls-position="right"
               />
             </el-form-item>
@@ -285,6 +302,7 @@
                   v-model="editingWire.weight"
                   :min="0"
                   :step="0.01"
+                  :precision="2"
                   controls-position="right"
               />
             </el-form-item>
@@ -463,6 +481,25 @@ const formatDateTime = (dateString) => {
     second: '2-digit'
   });
 };
+
+// 数值格式化函数（新增）
+const formatNumber = (value, type = 'default') => {
+  if (value === null || value === undefined || value === '') return '';
+
+  const num = parseFloat(value);
+  if (isNaN(num)) return '';
+
+  switch (type) {
+    case 'diameter':
+    case 'weight':
+    case 'conductivity':
+      return num.toFixed(2);
+    case 'extensibility':
+      return num.toFixed(1);
+    default:
+      return num.toString();
+  }
+};
 </script>
 
 <style scoped>
@@ -590,5 +627,12 @@ const formatDateTime = (dateString) => {
 /* 高级筛选内容区域样式 */
 .advanced-search-content {
   padding: 0 20px 20px;
+}
+
+/* 编辑对话框单位文本样式 */
+.unit-text {
+  margin-left: 8px;
+  color: #606266;
+  font-size: 14px;
 }
 </style>

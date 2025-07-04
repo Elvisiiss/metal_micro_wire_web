@@ -144,9 +144,12 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="180" fixed="right" align="center" v-if="isAdmin">
+      <el-table-column label="操作" width="240" fixed="right" align="center" v-if="isAdmin">
         <template #default="{ row }">
           <el-button size="small" @click="openEditForm(row)">编辑</el-button>
+          <el-button size="small" type="warning" @click="reEvaluateScenario(row.scenarioCode)">
+            重新检测
+          </el-button>
           <el-button size="small" type="danger" @click="deleteScenario(row.scenarioCode)">
             删除
           </el-button>
@@ -554,6 +557,32 @@ const deleteScenario = async (scenarioCode) => {
       console.error('删除失败:', error)
       ElMessage.error('删除失败: ' + (error.response?.data?.msg || error.message))
     }
+  }
+}
+
+// 新增：重新评估场景下的所有线材数据
+const reEvaluateScenario = async (scenarioCode) => {
+  try {
+    await ElMessageBox.confirm(
+        `确定要重新评估应用场景 ${scenarioCode} 下的所有线材数据吗？此操作可能需要较长时间。`,
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+    )
+
+    loading.value = true
+    const response = await scenarioAPI.reEvaluateScenario(scenarioCode)
+    ElMessage.success(response.msg || '重新评估操作已提交')
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('重新评估失败:', error)
+      ElMessage.error('重新评估失败: ' + (error.response?.data?.msg || error.message))
+    }
+  } finally {
+    loading.value = false
   }
 }
 
