@@ -232,13 +232,15 @@
     </el-table>
 
     <!-- 分页组件 -->
-    <div class="pagination-wrapper" v-if="totalPages > 1">
+    <div class="pagination-wrapper" v-if="totalElements > 0">
       <el-pagination
           v-model:current-page="currentPage"
-          :page-size="pageSize"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
           :total="totalElements"
-          layout="prev, pager, next, jumper, total"
-          @current-change="handlePageChange"
+          layout="total, sizes, prev, pager, next, jumper"
+          @current-change="fetchWireMaterials"
+          @size-change="handleSizeChange"
           background
       />
     </div>
@@ -436,6 +438,13 @@ const fetchWireMaterials = async () => {
   }
 };
 
+// 处理每页条数变化
+const handleSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  currentPage.value = 1; // 重置到第一页
+  fetchWireMaterials();
+};
+
 // 重置搜索
 const resetSearch = () => {
   searchParams.value = {
@@ -451,12 +460,6 @@ const resetSearch = () => {
     sortDirection: 'desc'
   };
   currentPage.value = 1;
-  fetchWireMaterials();
-};
-
-// 分页处理
-const handlePageChange = (page) => {
-  currentPage.value = page;
   fetchWireMaterials();
 };
 

@@ -444,7 +444,7 @@ const handleAccountLogin = async () => {
 
     if (response.code === 'success') {
       authStore.setUser(response)
-      router.push('/index');
+      router.push('/data-screen');
     } else {
       error.value = response.msg || '登录失败';
     }
@@ -469,8 +469,7 @@ const handleCodeLogin = async () => {
 
     if (response.code === 'success') {
       authStore.setUser(response)
-      alert(response)
-      router.push('/index');
+      router.push('/data-screen');
     } else {
       error.value = response.msg || '登录失败';
     }

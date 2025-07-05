@@ -34,26 +34,33 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="事件时间" width="180">
+          <el-table-column label="事件时间" width="100">
             <template #default="{ row }">
-              {{ formatDateTime(row.eventTime) }}
+              <div style="line-height: 1.4; text-align: center;">
+                <div>{{ formatDatePart(row.eventTime) }}</div>
+                <div>{{ formatTimePart(row.eventTime) }}</div>
+              </div>
             </template>
           </el-table-column>
 
           <el-table-column label="模型审核结果" width="180">
             <template #default="{ row }">
-              <div>
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <!-- 审核结果标签（保持居中） -->
                 <el-tag :type="row.modelEvaluationResult === 'PASS' ? 'success' : 'danger'">
                   {{ row.modelEvaluationResult === 'PASS' ? '通过' : '不通过' }}
                 </el-tag>
-                <div v-if="row.modelConfidence" style="margin-top: 5px;">
+
+                <!-- 置信度行（水平排列） -->
+                <div v-if="row.modelConfidence" style="margin-top: 5px; display: flex; align-items: center;">
+                  <span style="margin-right: 5px; font-size: 11px;">置信度:</span>
                   <el-progress
                       :percentage="row.modelConfidence * 100"
                       :color="confidenceColor(row.modelConfidence)"
                       :show-text="false"
-                      style="width: 100px; display: inline-block; margin-right: 5px;"
+                      style="width: 70px; margin-right: 5px;"
                   />
-                  <span>{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
+                  <span style="font-size: 12px;">{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
                 </div>
                 <span v-else>N/A</span>
               </div>
@@ -138,26 +145,33 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="事件时间" width="180">
+          <el-table-column label="事件时间" width="100">
             <template #default="{ row }">
-              {{ formatDateTime(row.eventTime) }}
+              <div style="line-height: 1.4; text-align: center;">
+                <div>{{ formatDatePart(row.eventTime) }}</div>
+                <div>{{ formatTimePart(row.eventTime) }}</div>
+              </div>
             </template>
           </el-table-column>
 
           <el-table-column label="模型审核结果" width="180">
             <template #default="{ row }">
-              <div>
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <!-- 审核结果标签（保持居中） -->
                 <el-tag :type="row.modelEvaluationResult === 'PASS' ? 'success' : 'danger'">
                   {{ row.modelEvaluationResult === 'PASS' ? '通过' : '不通过' }}
                 </el-tag>
-                <div v-if="row.modelConfidence" style="margin-top: 5px;">
+
+                <!-- 置信度行（水平排列） -->
+                <div v-if="row.modelConfidence" style="margin-top: 5px; display: flex; align-items: center;">
+                  <span style="margin-right: 5px; font-size: 11px;">置信度:</span>
                   <el-progress
                       :percentage="row.modelConfidence * 100"
                       :color="confidenceColor(row.modelConfidence)"
                       :show-text="false"
-                      style="width: 100px; display: inline-block; margin-right: 5px;"
+                      style="width: 70px; margin-right: 5px;"
                   />
-                  <span>{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
+                  <span style="font-size: 12px;">{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
                 </div>
                 <span v-else>N/A</span>
               </div>
@@ -328,6 +342,20 @@ const currentBatchNumber = ref('')
 onMounted(() => {
   fetchPendingMaterials()
 })
+
+// 提取日期部分
+const formatDatePart = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];  // 返回 "YYYY-MM-DD"
+}
+
+// 提取时间部分
+const formatTimePart = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toTimeString().split(' ')[0];  // 返回 "HH:mm:ss"
+}
 
 // 标签页切换处理
 const handleTabChange = (tabName) => {
@@ -710,5 +738,12 @@ const formatDateTime = (dateString) => {
 .el-pagination {
   margin-top: 16px;
   justify-content: flex-end;
+}
+
+/* 新增：置信度标签样式 */
+.confidence-label {
+  font-size: 12px;
+  color: #606266;
+  margin-bottom: 3px;
 }
 </style>

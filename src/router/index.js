@@ -14,15 +14,10 @@ const router = createRouter({
             redirect: (to) => {
                 const authStore = useAuthStore()
                 if (authStore.isAuthenticated) {
-                    const role_id = authStore.user?.role_id
-
-                    // 按照优先级重定向
-                    if (role_id === 999) return '/root'
-                    if (role_id === 0 || role_id === 1) return '/index'
+                    return '/data-screen'
                 }else{
                     return '/Landing'
                 }
-
             }
         },
         {
@@ -34,6 +29,11 @@ const router = createRouter({
         {
             path: '/notFound',
             component: import('../views/404.vue')
+        },
+        {
+            path: '/data-screen',
+            name: 'DataScreen',
+            component: () => import('@/views/IndexPage/DataScreen.vue') // 新建独立组件
         },
         {
             path: '/:pathMatch(.*)',
@@ -63,16 +63,6 @@ const router = createRouter({
             path: '/index',
             name: 'indexPage',
             component: import('../views/IndexPage/Dashboard.vue')
-        },
-        {
-            path: '/questionnaire',
-            name: 'Questionnaire',
-            component: () => import('@/views/Public/questionnaire.vue')
-        },
-        {
-            path: '/suggestion-and-feedback',
-            name: 'SuggestionAndFeedback',
-            component: () => import('@/views/Public/SuggestionAndFeedback.vue')
         },
         {
             path: '/user-settings',

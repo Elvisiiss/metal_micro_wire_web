@@ -9,16 +9,19 @@
         </div>
         <ul class="nav-menu">
           <li :class="{active: activeTab === 'dashboard'}"><a @click="setActiveTab('dashboard')">仪表盘</a></li>
-          <li :class="{active: activeTab === 'dataScreen'}"><a @click="setActiveTab('dataScreen')">数据大屏</a></li>
           <li :class="{active: activeTab === 'equipmentManage'}"><a @click="setActiveTab('equipmentManage')">设备管理</a></li>
           <li :class="{active: activeTab === 'ApplicationScenario'}"><a @click="setActiveTab('ApplicationScenario')">应用场景管理</a></li>
           <li :class="{active: activeTab === 'mwManagement'}"><a @click="setActiveTab('mwManagement')">检测管理</a></li>
           <li :class="{active: activeTab === 'QualityEvaluation'}"><a @click="setActiveTab('QualityEvaluation')">质量评估</a></li>
-          <li :class="{active: activeTab === 'DataAnalysis'}"><a @click="setActiveTab('DataAnalysis')">数据分析</a></li>
+          <li :class="{active: activeTab === 'ProblemTracing'}"><a @click="setActiveTab('ProblemTracing')">问题回溯</a></li>
           <li :class="{active: activeTab === 'chat'}"><a @click="setActiveTab('chat')">智能决策</a></li>
         </ul>
       </div>
       <div class="navbar-right">
+        <button class="data-screen-btn" @click="goToDataScreen">
+          <el-icon><DataBoard /></el-icon>
+          <span>数据大屏</span>
+        </button>
         <div class="user-profile" @click.stop="toggleDropdown" ref="userProfileRef">
           <div class="user-avatar">
             <img :src="userAvatar" alt="用户头像">
@@ -79,7 +82,7 @@
       <SystemConfig v-if="activeTab === 'SystemConfig'"/>
 
       <!-- 数据分析-->
-      <DataAnalysis v-if="activeTab === 'DataAnalysis'"/>
+      <ProblemTracing v-if="activeTab === 'ProblemTracing'"/>
 
       <!-- 数据分析-->
       <Helps v-if="activeTab === 'Helps'"/>
@@ -108,6 +111,14 @@
 </template>
 
 <script setup>
+import {
+  DataBoard,
+  User,
+  QuestionFilled,
+  Setting,
+  SwitchButton
+} from '@element-plus/icons-vue'
+
 import {onMounted, ref, onBeforeUnmount} from 'vue';
 import Overview from './Overview.vue';
 import DataScreen from './DataScreen.vue';
@@ -123,7 +134,7 @@ import AuthAPI from '@/api/auth.js'
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {ElMessage} from "element-plus";
-import DataAnalysis from "@/views/IndexPage/DataAnalysis.vue";
+import ProblemTracing from "@/views/IndexPage/ProblemTracing.vue";
 import Helps from "@/views/Public/Helps.vue";
 
 const router = useRouter();
@@ -135,6 +146,10 @@ const user_name = authStore.user?.user_name;
 // 获取DOM元素的引用
 const userProfileRef = ref(null);
 const dropdownMenuRef = ref(null);
+
+const goToDataScreen = () => {
+  router.push('/data-screen')
+}
 
 // 用户头像
 const userAvatar = ref('http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12');
@@ -539,4 +554,25 @@ onBeforeUnmount(() => {
   }
 }
 
+.data-screen-btn {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+  padding: 8px 16px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.data-screen-btn:hover {
+  background: #1669d8;
+}
+
+.data-screen-btn .el-icon {
+  margin-right: 6px;
+  font-size: 16px;
+}
 </style>
