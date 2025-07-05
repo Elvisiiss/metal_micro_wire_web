@@ -74,7 +74,7 @@
             </div>
             <div class="tech-item">
               <div class="tech-label">电导率</div>
-              <div class="tech-value">{{ wireMaterial.resistance }}</div>
+              <div class="tech-value">{{ wireMaterial.resistance }} MS/m</div>
               <el-progress
                   :percentage="resistancePercentage"
                   :color="resistanceColor"
@@ -83,7 +83,7 @@
             </div>
             <div class="tech-item">
               <div class="tech-label">延展率</div>
-              <div class="tech-value">{{ wireMaterial.extensibility }}%</div>
+              <div class="tech-value">{{ wireMaterial.extensibility }} δ</div>
               <el-progress
                   :percentage="extensibilityPercentage"
                   :color="extensibilityColor"
@@ -147,6 +147,46 @@
           <code>{{ wireMaterial.sourceOriginRaw }}</code>
         </div>
       </el-card>
+
+      <!-- 评估信息 -->
+      <el-card class="evaluation-card">
+        <template #header>
+          <div class="card-header">
+            <el-icon><Edit /></el-icon>
+            <span>质量评估信息</span>
+          </div>
+        </template>
+
+        <div class="evaluation-info">
+          <div class="evaluation-result">
+            <label>最终结果:</label>
+            <el-tag :type="finalEvaluationTagType(wireMaterial.finalEvaluationResult)">
+              {{ formatFinalResult(wireMaterial.finalEvaluationResult) }}
+            </el-tag>
+          </div>
+
+          <div class="evaluation-result">
+            <label>模型审核结果:</label>
+            <el-tag :type="wireMaterial.modelEvaluationResult === 'PASS' ? 'success' : 'danger'">
+              {{ wireMaterial.modelEvaluationResult === 'PASS' ? '通过' : '不通过' }}
+            </el-tag>
+            <span v-if="wireMaterial.modelConfidence"> (置信度: {{ (wireMaterial.modelConfidence * 100).toFixed(1) }}%)</span>
+          </div>
+
+          <div class="evaluation-result">
+            <label>规则引擎结果:</label>
+            <el-tag :type="evaluationTagType(wireMaterial.evaluationResult)">
+              {{ wireMaterial.evaluationResult === 'PASS' ? '通过' : '不通过' }}
+            </el-tag>
+          </div>
+
+          <div class="evaluation-message">
+            <div v-for="(part, index) in splitEvaluationMessage" :key="index" class="message-part">
+              {{ part }}
+            </div>
+          </div>
+        </div>
+      </el-card>
     </div>
 
     <!-- 无批次号提示 -->
@@ -161,9 +201,9 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted, watch} from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import {
-  InfoFilled, DataAnalysis, OfficeBuilding, Document
+  InfoFilled, DataAnalysis, OfficeBuilding, Document, Edit
 } from '@element-plus/icons-vue';
 import mwAPI from '@/api/mwManagement.js';
 
@@ -179,6 +219,17 @@ const batchNumber = ref(props.info);
 const wireMaterial = ref(null);
 const loading = ref(false);
 const error = ref(null);
+
+// 计算属性：分割评估信息
+const splitEvaluationMessage = computed(() => {
+  if (!wireMaterial.value?.evaluationMessage) return [];
+
+  // 按竖线分割各部分
+  const parts = wireMaterial.value.evaluationMessage.split('|').map(part => part.trim());
+
+  // 移除空字符串
+  return parts.filter(part => part.length > 0);
+});
 
 // 进度条计算
 const diameterPercentage = computed(() => {
@@ -252,6 +303,30 @@ const formatDateTime = (dateString) => {
     minute: '2-digit',
     second: '2-digit'
   });
+};
+
+// 辅助函数
+const evaluationTagType = (result) => {
+  if (result === 'PASS') return 'success';
+  if (result === 'FAIL') return 'danger';
+  return 'info';
+};
+
+const finalEvaluationTagType = (result) => {
+  if (result === 'PASS') return 'success';
+  if (result === 'FAIL') return 'danger';
+  if (result === 'PENDING_REVIEW') return 'warning';
+  return 'info';
+};
+
+const formatFinalResult = (result) => {
+  const map = {
+    'PASS': '合格',
+    'FAIL': '不合格',
+    'PENDING_REVIEW': '待审核',
+    'UNKNOWN': '未评估'
+  };
+  return map[result] || result;
 };
 
 // 监听info变化
@@ -364,7 +439,8 @@ onMounted(() => {
   margin-bottom: 8px;
 }
 
-.raw-data-card {
+.raw-data-card,
+.evaluation-card {
   margin-top: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -379,6 +455,48 @@ onMounted(() => {
   font-family: monospace;
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.evaluation-info {
+  padding: 15px;
+}
+
+.evaluation-result {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #e8eaed;
+}
+
+.evaluation-result label {
+  width: 120px;
+  font-weight: 500;
+  color: #5b7ba8;
+  flex-shrink: 0;
+}
+
+.evaluation-result .el-tag {
+  margin-right: 10px;
+}
+
+.evaluation-message {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+}
+
+.message-part {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.message-part:last-child {
+  margin-bottom: 0;
 }
 
 .loading-container, .error-container, .no-info {
@@ -415,6 +533,15 @@ onMounted(() => {
   }
 
   .info-item label {
+    margin-bottom: 5px;
+  }
+
+  .evaluation-result {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .evaluation-result label {
     margin-bottom: 5px;
   }
 }

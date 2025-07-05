@@ -2,217 +2,216 @@
   <div class="quality-evaluation">
     <!-- 质量评估管理 -->
 
-      <div class="management-header">
-        <h3>质量评估管理</h3>
-        <div class="actions">
-          <el-input v-model="scenarioCode" placeholder="输入场景代码" style="width: 200px" />
-          <el-button
-              type="primary"
-              @click="reEvaluateScenario"
-              :loading="reEvaluating"
-          >
-            重新评估场景
-          </el-button>
-        </div>
+    <div class="management-header">
+      <h3>质量评估管理</h3>
+      <div class="actions">
+        <el-input v-model="scenarioCode" placeholder="输入场景代码" style="width: 200px" />
+        <el-button
+            type="primary"
+            @click="reEvaluateScenario"
+            :loading="reEvaluating"
+        >
+          重新评估场景
+        </el-button>
       </div>
+    </div>
 
-      <el-tabs v-model="managementTab" @tab-change="handleTabChange">
-        <!-- 待审核列表 -->
-        <el-tab-pane label="待审核线材" name="pending">
-          <el-table :data="pendingMaterials" v-loading="pendingLoading">
-            <el-table-column prop="batchNumber" label="批次号" width="200" />
-            <el-table-column prop="scenarioCode" label="场景编号" width="100" />
+    <el-tabs v-model="managementTab" @tab-change="handleTabChange">
+      <!-- 待审核列表 -->
+      <el-tab-pane label="待审核线材" name="pending">
+        <el-table :data="pendingMaterials" v-loading="pendingLoading">
+          <el-table-column prop="batchNumber" label="批次号" width="200" />
+          <el-table-column prop="scenarioCode" label="场景编号" width="100" />
 
-            <el-table-column label="技术参数" width="250">
-              <template #default="{ row }">
-                <div class="tech-params">
-                  <div><span class="param-label">直径:</span> {{ row.diameter }} mm</div>
-                  <div><span class="param-label">电导率:</span> {{ row.resistance }}</div>
-                  <div><span class="param-label">延展率:</span> {{ row.extensibility }}%</div>
-                  <div><span class="param-label">重量:</span> {{ row.weight }} g</div>
-                </div>
-              </template>
-            </el-table-column>
+          <el-table-column label="技术参数" width="250">
+            <template #default="{ row }">
+              <div class="tech-params">
+                <div><span class="param-label">直径:</span> {{ formatNumber(row.diameter, 'diameter') }} mm</div>
+                <div><span class="param-label">电导率:</span> {{ formatNumber(row.resistance, 'conductivity') }} MS/m</div>
+                <div><span class="param-label">延展率:</span> {{ formatNumber(row.extensibility, 'extensibility') }} δ</div>
+                <div><span class="param-label">重量:</span> {{ formatNumber(row.weight, 'weight') }} g</div>
+              </div>
+            </template>
+          </el-table-column>
 
-            <el-table-column label="事件时间" width="180">
-              <template #default="{ row }">
-                {{ formatDateTime(row.eventTime) }}
-              </template>
-            </el-table-column>
+          <el-table-column label="事件时间" width="180">
+            <template #default="{ row }">
+              {{ formatDateTime(row.eventTime) }}
+            </template>
+          </el-table-column>
 
-            <el-table-column label="模型审核结果" width="120">
-              <template #default="{ row }">
+          <el-table-column label="模型审核结果" width="180">
+            <template #default="{ row }">
+              <div>
                 <el-tag :type="row.modelEvaluationResult === 'PASS' ? 'success' : 'danger'">
                   {{ row.modelEvaluationResult === 'PASS' ? '通过' : '不通过' }}
                 </el-tag>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="规则引擎" width="120">
-              <template #default="{ row }">
-                <el-tag :type="evaluationTagType(row.evaluationResult)">
-                  {{ row.evaluationResult === 'PASS' ? '通过' : '不通过' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="最终结果" width="120">
-              <template #default="{ row }">
-                <el-tag :type="finalEvaluationTagType(row.finalEvaluationResult)">
-                  {{ formatFinalResult(row.finalEvaluationResult) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="评估信息" min-width="200">
-              <template #default="{ row }">
-                <div class="evaluation-message" @click="showAuditHistory(row)">
-                  <div v-if="splitMessage(row.evaluationMessage).modelMsg">
-                    <span class="info-label">评估信息:</span> {{ splitMessage(row.evaluationMessage).modelMsg }}
-                  </div>
-                  <div v-if="splitMessage(row.evaluationMessage).lastAuditMsg">
-                    <span class="info-label">人工审核:</span> {{ splitMessage(row.evaluationMessage).lastAuditMsg }}
-                  </div>
-                  <div v-if="splitMessage(row.evaluationMessage).hasMore" class="more-tip">
-                    <el-icon><ArrowDown /></el-icon>
-                    <span>点击查看完整记录</span>
-                  </div>
+                <div v-if="row.modelConfidence" style="margin-top: 5px;">
+                  <el-progress
+                      :percentage="row.modelConfidence * 100"
+                      :color="confidenceColor(row.modelConfidence)"
+                      :show-text="false"
+                      style="width: 100px; display: inline-block; margin-right: 5px;"
+                  />
+                  <span>{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
                 </div>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="置信度" width="120">
-              <template #default="{ row }">
-                <el-progress
-                    v-if="row.modelConfidence"
-                    :percentage="row.modelConfidence * 100"
-                    :color="confidenceColor(row.modelConfidence)"
-                    :show-text="false"
-                />
-                <span v-if="row.modelConfidence">{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
                 <span v-else>N/A</span>
-              </template>
-            </el-table-column>
+              </div>
+            </template>
+          </el-table-column>
 
-            <el-table-column label="操作" width="160">
-              <template #default="{ row }">
-                <el-button size="small" @click="showConfirmDialog(row)">审核</el-button>
-                <el-button size="small" @click="showAuditHistory(row)">显示审核记录</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <el-table-column label="规则引擎" width="120">
+            <template #default="{ row }">
+              <el-tag :type="evaluationTagType(row.evaluationResult)">
+                {{ row.evaluationResult === 'PASS' ? '通过' : '不通过' }}
+              </el-tag>
+            </template>
+          </el-table-column>
 
-          <el-pagination
-              v-model:current-page="pendingPage"
-              :page-size="pendingPageSize"
-              :total="pendingTotal"
-              @current-change="fetchPendingMaterials"
-          />
-        </el-tab-pane>
+          <el-table-column label="最终结果" width="120">
+            <template #default="{ row }">
+              <el-tag :type="finalEvaluationTagType(row.finalEvaluationResult)">
+                {{ formatFinalResult(row.finalEvaluationResult) }}
+              </el-tag>
+            </template>
+          </el-table-column>
 
-        <!-- 已完成列表 -->
-        <el-tab-pane label="已完成评估" name="completed">
-          <div class="filter-bar">
-            <el-input v-model="completedScenario" placeholder="场景代码" style="width: 200px" />
-            <el-select v-model="sortBy" placeholder="排序方式">
-              <el-option label="创建时间" value="createTime" />
-              <el-option label="置信度" value="modelConfidence" />
-            </el-select>
-            <el-select v-model="sortDirection" placeholder="排序方向">
-              <el-option label="降序" value="desc" />
-              <el-option label="升序" value="asc" />
-            </el-select>
-            <el-button type="primary" @click="fetchCompletedMaterials">筛选</el-button>
-          </div>
-
-          <el-table :data="completedMaterials" v-loading="completedLoading">
-            <el-table-column prop="batchNumber" label="批次号" width="200" />
-            <el-table-column prop="scenarioCode" label="场景编号" width="100" />
-
-            <el-table-column label="技术参数" width="200">
-              <template #default="{ row }">
-                <div class="tech-params">
-                  <div><span class="param-label">直径:</span> {{ row.diameter }} mm</div>
-                  <div><span class="param-label">电导率:</span> {{ row.resistance }}</div>
-                  <div><span class="param-label">延展率:</span> {{ row.extensibility }}%</div>
-                  <div><span class="param-label">重量:</span> {{ row.weight }} g</div>
+          <el-table-column label="评估信息" min-width="200">
+            <template #default="{ row }">
+              <div class="evaluation-message" @click="showAuditHistory(row)">
+                <div v-if="splitMessage(row.evaluationMessage).modelMsg">
+                  <span class="info-label">评估信息:</span> {{ splitMessage(row.evaluationMessage).modelMsg }}
                 </div>
-              </template>
-            </el-table-column>
+                <div v-for="(audit, index) in splitMessage(row.evaluationMessage).lastAuditMsgs" :key="index">
+                  <span class="info-label">{{ audit.type }}:</span> {{ audit.content }}
+                </div>
+                <div v-if="splitMessage(row.evaluationMessage).hasMore" class="more-tip">
+                  <el-icon><ArrowDown /></el-icon>
+                  <span>点击查看完整记录</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
 
-            <el-table-column label="事件时间" width="180">
-              <template #default="{ row }">
-                {{ formatDateTime(row.eventTime) }}
-              </template>
-            </el-table-column>
+          <el-table-column label="操作" width="160">
+            <template #default="{ row }">
+              <el-button size="small" @click="showConfirmDialog(row)">审核</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
 
-            <el-table-column label="模型审核结果" width="120">
-              <template #default="{ row }">
+        <el-pagination
+            v-model:current-page="pendingPage"
+            :page-size="pendingPageSize"
+            :total="pendingTotal"
+            @current-change="fetchPendingMaterials"
+        />
+      </el-tab-pane>
+
+      <!-- 已完成列表 -->
+      <el-tab-pane label="已完成评估" name="completed">
+        <div class="filter-bar">
+          <el-input v-model="completedScenario" placeholder="场景代码" style="width: 200px" />
+          <el-select v-model="sortBy" placeholder="排序方式">
+            <el-option label="创建时间" value="createTime" />
+            <el-option label="置信度" value="modelConfidence" />
+          </el-select>
+          <el-select v-model="sortDirection" placeholder="排序方向">
+            <el-option label="降序" value="desc" />
+            <el-option label="升序" value="asc" />
+          </el-select>
+          <el-button type="primary" @click="fetchCompletedMaterials">筛选</el-button>
+        </div>
+
+        <el-table :data="completedMaterials" v-loading="completedLoading">
+          <el-table-column prop="batchNumber" label="批次号" width="200" />
+          <el-table-column prop="scenarioCode" label="场景编号" width="100" />
+
+          <el-table-column label="技术参数" width="250">
+            <template #default="{ row }">
+              <div class="tech-params">
+                <div><span class="param-label">直径:</span> {{ formatNumber(row.diameter, 'diameter') }} mm</div>
+                <div><span class="param-label">电导率:</span> {{ formatNumber(row.resistance, 'conductivity') }} MS/m</div>
+                <div><span class="param-label">延展率:</span> {{ formatNumber(row.extensibility, 'extensibility') }} δ</div>
+                <div><span class="param-label">重量:</span> {{ formatNumber(row.weight, 'weight') }} g</div>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="事件时间" width="180">
+            <template #default="{ row }">
+              {{ formatDateTime(row.eventTime) }}
+            </template>
+          </el-table-column>
+
+          <el-table-column label="模型审核结果" width="180">
+            <template #default="{ row }">
+              <div>
                 <el-tag :type="row.modelEvaluationResult === 'PASS' ? 'success' : 'danger'">
                   {{ row.modelEvaluationResult === 'PASS' ? '通过' : '不通过' }}
                 </el-tag>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="规则引擎" width="120">
-              <template #default="{ row }">
-                <el-tag :type="evaluationTagType(row.evaluationResult)">
-                  {{ row.evaluationResult === 'PASS' ? '通过' : '不通过' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="最终结果" width="120">
-              <template #default="{ row }">
-                <el-tag :type="finalEvaluationTagType(row.finalEvaluationResult)">
-                  {{ formatFinalResult(row.finalEvaluationResult) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="评估信息" min-width="200">
-              <template #default="{ row }">
-                <div class="evaluation-message" @click="showAuditHistory(row)">
-                  <div v-if="splitMessage(row.evaluationMessage).modelMsg">
-                    <span class="info-label">评估信息:</span> {{ splitMessage(row.evaluationMessage).modelMsg }}
-                  </div>
-                  <div v-if="splitMessage(row.evaluationMessage).lastAuditMsg">
-                    <span class="info-label">人工审核:</span> {{ splitMessage(row.evaluationMessage).lastAuditMsg }}
-                  </div>
-                  <div v-if="splitMessage(row.evaluationMessage).hasMore" class="more-tip">
-                    <el-icon><ArrowDown /></el-icon>
-                    <span>点击查看完整记录</span>
-                  </div>
+                <div v-if="row.modelConfidence" style="margin-top: 5px;">
+                  <el-progress
+                      :percentage="row.modelConfidence * 100"
+                      :color="confidenceColor(row.modelConfidence)"
+                      :show-text="false"
+                      style="width: 100px; display: inline-block; margin-right: 5px;"
+                  />
+                  <span>{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
                 </div>
-              </template>
-            </el-table-column>
+                <span v-else>N/A</span>
+              </div>
+            </template>
+          </el-table-column>
 
-            <el-table-column label="置信度" width="120">
-              <template #default="{ row }">
-                <el-progress
-                    :percentage="row.modelConfidence * 100"
-                    :color="confidenceColor(row.modelConfidence)"
-                    :show-text="false"
-                />
-                <span>{{ (row.modelConfidence * 100).toFixed(1) }}%</span>
-              </template>
-            </el-table-column>
+          <el-table-column label="规则引擎" width="120">
+            <template #default="{ row }">
+              <el-tag :type="evaluationTagType(row.evaluationResult)">
+                {{ row.evaluationResult === 'PASS' ? '通过' : '不通过' }}
+              </el-tag>
+            </template>
+          </el-table-column>
 
-            <el-table-column label="操作" width="160">
-              <template #default="{ row }">
-                <el-button size="small" @click="showConfirmDialog(row)">重新审核</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
+          <el-table-column label="最终结果" width="120">
+            <template #default="{ row }">
+              <el-tag :type="finalEvaluationTagType(row.finalEvaluationResult)">
+                {{ formatFinalResult(row.finalEvaluationResult) }}
+              </el-tag>
+            </template>
+          </el-table-column>
 
-          <el-pagination
-              v-model:current-page="completedPage"
-              :page-size="completedPageSize"
-              :total="completedTotal"
-              @current-change="fetchCompletedMaterials"
-          />
-        </el-tab-pane>
-      </el-tabs>
+          <el-table-column label="评估信息" min-width="200">
+            <template #default="{ row }">
+              <div class="evaluation-message" @click="showAuditHistory(row)">
+                <div v-if="splitMessage(row.evaluationMessage).modelMsg">
+                  <span class="info-label">评估信息:</span> {{ splitMessage(row.evaluationMessage).modelMsg }}
+                </div>
+                <div v-for="(audit, index) in splitMessage(row.evaluationMessage).lastAuditMsgs" :key="index">
+                  <span class="info-label">{{ audit.type }}:</span> {{ audit.content }}
+                </div>
+                <div v-if="splitMessage(row.evaluationMessage).hasMore" class="more-tip">
+                  <el-icon><ArrowDown /></el-icon>
+                  <span>点击查看完整记录</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="操作" width="160">
+            <template #default="{ row }">
+              <el-button size="small" @click="showConfirmDialog(row)">重新审核</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <el-pagination
+            v-model:current-page="completedPage"
+            :page-size="completedPageSize"
+            :total="completedTotal"
+            @current-change="fetchCompletedMaterials"
+        />
+      </el-tab-pane>
+    </el-tabs>
 
     <!-- 人工审核对话框 -->
     <el-dialog v-model="confirmDialogVisible" title="人工审核确认">
@@ -246,22 +245,31 @@
 
     <!-- 审核记录对话框 -->
     <el-dialog v-model="auditHistoryVisible" :title="`审核记录 - ${currentBatchNumber}`" width="50%">
-      <el-timeline>
-        <el-timeline-item
-            v-for="(record, index) in auditHistory"
-            :key="index"
-            :timestamp="formatRecordTime(record.time)"
-            placement="top"
-        >
-          <el-card>
-            <h4>{{ record.type }}记录</h4>
-            <p>{{ record.message }}</p>
-            <div v-if="record.remark" class="audit-remark">
-              <strong>备注：</strong> {{ record.remark }}
-            </div>
-          </el-card>
-        </el-timeline-item>
-      </el-timeline>
+      <div class="audit-history-container">
+        <div v-for="(record, index) in auditHistory" :key="index" class="audit-record">
+          <div class="record-header">
+            <div class="record-type">{{ record.type }}</div>
+          </div>
+          <div class="record-content">
+            {{ record.content }}
+          </div>
+          <div v-if="record.reviewer" class="reviewer-info">
+            <span class="reviewer-label">审核人：</span>
+            <span class="reviewer-name">
+              {{ record.reviewer.name }}
+            </span>
+            <span>({{ record.reviewer.email }})</span>
+          </div>
+          <div v-if="record.type === '最终结果'" class="result-icon">
+            <el-icon v-if="record.result === 'PASS'" color="#67C23A" :size="24">
+              <CircleCheckFilled />
+            </el-icon>
+            <el-icon v-else-if="record.result === 'FAIL'" color="#F56C6C" :size="24">
+              <CircleCloseFilled />
+            </el-icon>
+          </div>
+        </div>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -272,8 +280,13 @@ import {
   ElMessage,
   ElMessageBox
 } from 'element-plus'
-import { ArrowDown } from '@element-plus/icons-vue'
+import { ArrowDown, CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue'
 import qualityAPI from '@/api/qualityEvaluation'
+import { useAuthStore } from '@/stores/auth';
+
+// 引入权限存储
+const authStore = useAuthStore();
+const user_name = authStore.user?.user_name;
 
 // 评估管理
 const managementTab = ref('pending')
@@ -426,60 +439,53 @@ const showAuditHistory = (row) => {
 const parseAuditHistory = (row) => {
   const records = []
 
-  // 添加规则引擎评估记录
-  records.push({
-    type: '规则引擎评估',
-    message: extractModelMessage(row.evaluationMessage),
-    time: row.createTime
-  })
+  // 规则引擎评估记录
+  const { modelMsg } = splitMessage(row.evaluationMessage)
+  if (modelMsg) {
+    records.push({
+      type: '规则引擎评估',
+      content: modelMsg
+    })
+  }
 
-  // 添加人工审核记录
+  // 人工审核记录
   const auditRecords = extractAuditRecords(row.evaluationMessage)
   auditRecords.forEach((record, index) => {
     records.push({
-      type: `人工审核 #${index + 1}`,
-      message: record.message,
-      remark: record.remark,
-      time: row.createTime // 实际项目中应该使用审核时间字段
+      type: record.type,
+      content: record.content,
+      reviewer: {
+        name: record.reviewerName,
+        email: record.reviewerEmail
+      }
     })
   })
 
-  // 添加最终审核结果
+  // 最终审核结果
   records.push({
     type: '最终结果',
-    message: `最终评估结果: ${formatFinalResult(row.finalEvaluationResult)}`,
-    time: row.createTime
+    content: formatFinalResult(row.finalEvaluationResult),
+    result: row.finalEvaluationResult
   })
 
   return records
-}
-
-// 提取模型评估信息
-const extractModelMessage = (message) => {
-  if (!message) return '无评估信息'
-
-  // 使用正则匹配模型评估部分（第一条记录）
-  const modelPart = message.split('|')[0].trim()
-  // 移除可能的人工审核标记
-  return modelPart.replace(/人工重新审核：.*$/, '').trim()
 }
 
 // 提取人工审核记录
 const extractAuditRecords = (message) => {
   if (!message) return []
 
-  // 使用正则匹配所有人工审核记录
-  const auditPattern = /人工(重新)?审核：([^|]+)/g
+  // 匹配所有人工审核记录
+  const auditPattern = /(人工(重新)?审核：)([^\[]+)\s*\[审核人：([^(]+)\(([^)]+)\)\]/g
   const records = []
   let match
 
   while ((match = auditPattern.exec(message)) !== null) {
-    const recordText = match[2].trim()
-    // 分割审核内容和备注
-    const parts = recordText.split('备注：')
     records.push({
-      message: parts[0].trim(),
-      remark: parts[1] ? parts[1].trim() : ''
+      type: match[1].replace('：', ''), // 移除冒号
+      content: match[3].trim(),
+      reviewerName: match[4].trim(),
+      reviewerEmail: match[5].trim()
     })
   }
 
@@ -490,26 +496,51 @@ const extractAuditRecords = (message) => {
 const splitMessage = (message) => {
   if (!message) return {
     modelMsg: '',
-    lastAuditMsg: '',
+    auditMsgs: [],
+    lastAuditMsgs: [],
     hasMore: false
   }
 
-  // 提取模型信息
-  const modelMsg = extractModelMessage(message)
+  // 分割各个部分
+  const parts = message.split('|').map(part => part.trim())
+
+  // 第一个部分是模型评估信息
+  const modelMsg = parts[0]
 
   // 提取人工审核记录
   const auditRecords = extractAuditRecords(message)
-  const lastAuditMsg = auditRecords.length > 0 ? auditRecords[auditRecords.length - 1].message : ''
 
-  // 检查是否有更多记录
-  const hasMore = auditRecords.length > 1 ||
-      (modelMsg && auditRecords.length > 0) ||
-      message.includes('|')
+  // 只取最后一条审核记录用于表格显示
+  const lastAuditMsgs = auditRecords.slice(-1)
+
+  // 检查是否有更多记录（超过1条记录）
+  const hasMore = auditRecords.length > 1 || parts.length > 1
 
   return {
     modelMsg,
-    lastAuditMsg,
+    auditMsgs: auditRecords,
+    lastAuditMsgs,
     hasMore
+  }
+}
+
+// 数值格式化函数
+const formatNumber = (value, type = 'default') => {
+  if (value === null || value === undefined || value === '') return ''
+
+  const num = parseFloat(value)
+  if (isNaN(num)) return ''
+
+  switch (type) {
+    case 'diameter':
+    case 'weight':
+      return num.toFixed(2)
+    case 'conductivity':
+      return num.toFixed(2)
+    case 'extensibility':
+      return num.toFixed(1)
+    default:
+      return num.toString()
   }
 }
 
@@ -549,12 +580,6 @@ const formatDateTime = (dateString) => {
   const datePart = date.toISOString().split('T')[0]
   const timePart = date.toTimeString().split(' ')[0]
   return `${datePart} ${timePart}`
-}
-
-const formatRecordTime = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-CN')
 }
 </script>
 
@@ -625,17 +650,56 @@ const formatRecordTime = (dateString) => {
   gap: 5px;
 }
 
-.audit-remark {
-  margin-top: 8px;
-  padding: 8px;
-  background-color: #f8f8f8;
-  border-radius: 4px;
-  border-left: 3px solid #409eff;
-}
-
-.el-timeline {
+.audit-history-container {
   max-height: 60vh;
   overflow-y: auto;
+  padding: 10px;
+}
+
+.audit-record {
+  border-left: 3px solid #409eff;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background-color: #f8fafc;
+  border-radius: 0 8px 8px 0;
+  position: relative;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.record-type {
+  font-weight: bold;
+  color: #1a3a6e;
+}
+
+.record-content {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.reviewer-info {
+  font-size: 13px;
+  color: #666;
+}
+
+.reviewer-label {
+  font-weight: bold;
+}
+
+.reviewer-name.current-user {
+  color: #409eff;
+  font-weight: bold;
+}
+
+.result-icon {
+  position: absolute;
+  top: 12px;
+  right: 16px;
 }
 
 .el-table {

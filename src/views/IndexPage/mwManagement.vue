@@ -181,17 +181,17 @@
         </template>
       </el-table-column>
 
-      <!-- 新增：最终评估结果列 -->
+      <!-- 修改：最终评估结果列 -->
       <el-table-column label="最终评估结果" width="140" align="center">
         <template #default="{ row }">
-          <el-tooltip :content="row.evaluationMessage" placement="top" effect="light">
-            <el-tag
-                :type="row.finalEvaluationResult === 'PASS' ? 'success' : 'danger'"
-                effect="dark"
-            >
-              {{ row.finalEvaluationResult === 'PASS' ? '通过' : '失败' }}
-            </el-tag>
-          </el-tooltip>
+          <el-tag
+              :type="row.finalEvaluationResult === 'PASS' ? 'success' : 'danger'"
+              effect="dark"
+              @click="showAuditHistory(row)"
+              style="cursor: pointer;"
+          >
+            {{ row.finalEvaluationResult === 'PASS' ? '通过' : '失败' }}
+          </el-tag>
         </template>
       </el-table-column>
 
@@ -335,12 +335,41 @@
         <el-button type="primary" @click="saveWireMaterial">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 新增：审核记录对话框 -->
+    <el-dialog v-model="auditHistoryVisible" :title="`审核记录 - ${currentBatchNumber}`" width="50%">
+      <div class="audit-history-container">
+        <div v-for="(record, index) in auditHistory" :key="index" class="audit-record">
+          <div class="record-header">
+            <div class="record-type">{{ record.type }}</div>
+          </div>
+          <div class="record-content">
+            {{ record.content }}
+          </div>
+          <div v-if="record.reviewer" class="reviewer-info">
+            <span class="reviewer-label">审核人：</span>
+            <span class="reviewer-name">
+              {{ record.reviewer.name }}
+            </span>
+            <span>({{ record.reviewer.email }})</span>
+          </div>
+          <div v-if="record.type === '最终结果'" class="result-icon">
+            <el-icon v-if="record.result === 'PASS'" color="#67C23A" :size="24">
+              <CircleCheckFilled />
+            </el-icon>
+            <el-icon v-else-if="record.result === 'FAIL'" color="#F56C6C" :size="24">
+              <CircleCloseFilled />
+            </el-icon>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Search, Filter } from '@element-plus/icons-vue';
+import { Search, Filter, CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import mwAPI from '@/api/mwManagement.js';
 import { useAuthStore } from '@/stores/auth';
@@ -355,6 +384,11 @@ const loading = ref(false);
 const advancedSearchActive = ref(false);
 const editDialogVisible = ref(false);
 const editingWire = ref(null);
+
+// 审核记录相关
+const auditHistoryVisible = ref(false);
+const auditHistory = ref([]);
+const currentBatchNumber = ref('');
 
 // 搜索参数
 const searchParams = ref({
@@ -482,7 +516,7 @@ const formatDateTime = (dateString) => {
   });
 };
 
-// 数值格式化函数（新增）
+// 数值格式化函数
 const formatNumber = (value, type = 'default') => {
   if (value === null || value === undefined || value === '') return '';
 
@@ -499,6 +533,64 @@ const formatNumber = (value, type = 'default') => {
     default:
       return num.toString();
   }
+};
+
+// 显示审核历史记录
+const showAuditHistory = (row) => {
+  currentBatchNumber.value = row.batchNumber;
+  auditHistory.value = parseAuditHistory(row);
+  auditHistoryVisible.value = true;
+};
+
+// 解析审核历史记录
+const parseAuditHistory = (row) => {
+  const records = [];
+
+  // 规则引擎评估记录
+  if (row.evaluationMessage) {
+    // 尝试提取模型评估信息（假设是第一部分）
+    const parts = row.evaluationMessage.split('|');
+    if (parts.length > 0) {
+      records.push({
+        type: '规则引擎评估',
+        content: parts[0].trim()
+      });
+    }
+
+    // 提取人工审核记录
+    const auditPattern = /(人工(重新)?审核：)([^\[]+)\s*\[审核人：([^(]+)\(([^)]+)\)\]/g;
+    let match;
+    while ((match = auditPattern.exec(row.evaluationMessage)) !== null) {
+      records.push({
+        type: match[1].replace('：', ''),
+        content: match[3].trim(),
+        reviewer: {
+          name: match[4].trim(),
+          email: match[5].trim()
+        }
+      });
+    }
+  }
+
+  // 最终审核结果
+  records.push({
+    type: '最终结果',
+    content: formatFinalResult(row.finalEvaluationResult),
+    result: row.finalEvaluationResult
+  });
+
+  return records;
+};
+
+// 格式化最终结果
+const formatFinalResult = (result) => {
+  const map = {
+    'PASS': '合格',
+    'FAIL': '不合格',
+    'PENDING_REVIEW': '待审核',
+    'UNKNOWN': '未评估'
+  };
+  return map[result] || result;
 };
 </script>
 
@@ -629,10 +721,56 @@ const formatNumber = (value, type = 'default') => {
   padding: 0 20px 20px;
 }
 
-/* 编辑对话框单位文本样式 */
-.unit-text {
-  margin-left: 8px;
-  color: #606266;
-  font-size: 14px;
+/* 新增：审核记录样式 */
+.audit-history-container {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.audit-record {
+  border-left: 3px solid #409eff;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background-color: #f8fafc;
+  border-radius: 0 8px 8px 0;
+  position: relative;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.record-type {
+  font-weight: bold;
+  color: #1a3a6e;
+}
+
+.record-content {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.reviewer-info {
+  font-size: 13px;
+  color: #666;
+}
+
+.reviewer-label {
+  font-weight: bold;
+}
+
+.reviewer-name.current-user {
+  color: #409eff;
+  font-weight: bold;
+}
+
+.result-icon {
+  position: absolute;
+  top: 12px;
+  right: 16px;
 }
 </style>
