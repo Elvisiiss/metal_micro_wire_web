@@ -1,827 +1,798 @@
 <template>
-  <div class="dashboard-container">
-    <!-- 顶部标题区域 -->
-    <div class="dashboard-header">
-      <h1 class="title">金属微细线材检测平台</h1>
-      <div class="header-info">
-        <div class="status-indicator online"></div>
-        <span>运行中</span>
-        <div class="time-display">{{ currentTime }}</div>
+  <div class="overview-page">
+    <!-- 页面标题区域 -->
+    <div class="page-header-custom">
+      <div class="header-content">
+        <span class="page-title">系统仪表盘</span>
+        <span class="page-subtitle">金属微丝质量检测系统数据概览</span>
+      </div>
+      <div class="header-stats">
+        <el-tag>最后更新: {{ lastUpdated }}</el-tag>
+        <el-button
+            type="primary"
+            size="small"
+            :icon="Refresh"
+            @click="refreshAllData"
+            :loading="refreshing"
+        >
+          刷新数据
+        </el-button>
       </div>
     </div>
 
-    <!-- 数据概览区域 -->
-    <div class="data-overview">
-      <div class="data-card" v-for="(item, index) in overviewData" :key="index">
-        <div class="data-icon" :style="{ backgroundColor: item.color }">
-          <i :class="item.icon"></i>
-        </div>
-        <div class="data-content">
-          <div class="data-value">{{ item.value }}{{ item.unit }}</div>
-          <div class="data-label">{{ item.label }}</div>
-        </div>
-        <div class="data-trend" :class="item.trend >= 0 ? 'up' : 'down'">
-          <i :class="item.trend >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
-          {{ Math.abs(item.trend) }}%
-        </div>
-      </div>
+    <!-- 系统总体统计卡片 -->
+    <div class="overview-cards">
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12" :md="8" :lg="6">
+          <el-card shadow="hover" class="stat-card">
+            <div class="card-content">
+              <div class="card-icon total-icon">
+                <el-icon><DataAnalysis /></el-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">总检测数量</div>
+                <div class="card-value">{{ formatNumber(overallData.totalDetectionCount) }}</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+
+        <el-col :xs="24" :sm="12" :md="8" :lg="6">
+          <el-card shadow="hover" class="stat-card">
+            <div class="card-content">
+              <div class="card-icon pass-icon">
+                <el-icon><CircleCheck /></el-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">合格率</div>
+                <div class="card-value">{{ overallData.totalPassRate }}%</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+
+        <el-col :xs="24" :sm="12" :md="8" :lg="6">
+          <el-card shadow="hover" class="stat-card">
+            <div class="card-content">
+              <div class="card-icon scenario-icon">
+                <el-icon><Opportunity /></el-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">应用场景</div>
+                <div class="card-value">{{ formatNumber(overallData.totalScenarioCount) }}</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+
+        <el-col :xs="24" :sm="12" :md="8" :lg="6">
+          <el-card shadow="hover" class="stat-card">
+            <div class="card-content">
+              <div class="card-icon device-icon">
+                <el-icon><Cpu /></el-icon>
+              </div>
+              <div class="card-info">
+                <div class="card-title">检测设备</div>
+                <div class="card-value">{{ formatNumber(overallData.totalDeviceCount) }}</div>
+              </div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
 
-    <!-- 图表区域 -->
+    <!-- 月度统计和场景统计 -->
     <div class="chart-container">
-      <div class="chart-wrapper">
-        <div class="chart-title">线材直径实时监测</div>
-        <div class="chart" ref="diameterChart"></div>
-      </div>
-      <div class="chart-wrapper">
-        <div class="chart-title">缺陷类型分布</div>
-        <div class="chart" ref="defectChart"></div>
-      </div>
-      <div class="chart-wrapper">
-        <div class="chart-title">生产合格率趋势</div>
-        <div class="chart" ref="qualityChart"></div>
-      </div>
+      <el-row :gutter="16">
+        <el-col :xs="24" :lg="16">
+          <el-card shadow="hover" class="chart-card">
+            <template #header>
+              <div class="chart-header">
+                <span>年度检测数据统计</span>
+                <div class="chart-controls">
+                  <el-tag type="success">合格率</el-tag>
+                  <el-tag type="info">合格数</el-tag>
+                  <el-tag type="danger">不合格数</el-tag>
+                </div>
+              </div>
+            </template>
+            <div class="chart-wrapper">
+              <div v-if="loading.yearly" class="loading-chart">
+                <el-icon class="is-loading"><Loading /></el-icon>
+                <span>加载年度数据中...</span>
+              </div>
+              <div v-else class="chart" ref="yearlyChartRef" style="height: 400px;"></div>
+            </div>
+          </el-card>
+        </el-col>
+
+        <el-col :xs="24" :lg="8">
+          <el-card shadow="hover" class="chart-card">
+            <template #header>
+              <div class="chart-header">
+                <span>应用场景分布</span>
+                <div class="chart-controls">
+                  <el-select
+                      v-model="scenarioTimeRange"
+                      size="small"
+                      @change="fetchScenarioData"
+                      style="width: 200px"
+                  >
+                    <el-option label="本月" value="this_month" />
+                    <el-option label="上月" value="last_month" />
+                    <el-option label="今年" value="this_year" />
+                    <el-option label="去年" value="last_year" />
+                    <el-option label="全部" value="all" />
+                  </el-select>
+                </div>
+              </div>
+            </template>
+            <div class="chart-wrapper">
+              <div v-if="loading.scenario" class="loading-chart">
+                <el-icon class="is-loading"><Loading /></el-icon>
+                <span>加载场景数据中...</span>
+              </div>
+              <div v-else class="chart" ref="scenarioChartRef" style="height: 400px;"></div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
 
-    <!-- 报警信息 -->
-    <div class="alarm-container">
-      <div class="section-title">实时报警信息</div>
-      <div class="alarm-list">
-        <div v-for="(alarm, index) in alarms" :key="index" class="alarm-item">
-          <div class="alarm-level" :class="'level-' + alarm.level">{{ alarm.levelText }}</div>
-          <div class="alarm-content">
-            <div class="alarm-title">{{ alarm.title }}</div>
-            <div class="alarm-time">{{ alarm.time }}</div>
+    <!-- 月度详情表格 -->
+    <div class="monthly-table">
+      <el-card shadow="hover">
+        <template #header>
+          <div class="table-header">
+            <span>月度检测详情</span>
           </div>
-          <div class="alarm-location">{{ alarm.location }}</div>
-          <button class="alarm-action">处理</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 底部状态栏 -->
-    <div class="dashboard-footer">
-      <div class="system-status">
-        <div class="status-item">
-          <span>检测设备:</span>
-          <span class="status-value">在线 (12台)</span>
-        </div>
-        <div class="status-item">
-          <span>数据采集:</span>
-          <span class="status-value active">正常</span>
-        </div>
-        <div class="status-item">
-          <span>存储状态:</span>
-          <span class="status-value">89%</span>
-        </div>
-      </div>
-      <div class="production-stats">
-        <div class="stat-item">
-          <span>今日产量:</span>
-          <span class="stat-value">{{ productionStats.today }} 米</span>
-        </div>
-        <div class="stat-item">
-          <span>本月累计:</span>
-          <span class="stat-value">{{ productionStats.month }} 米</span>
-        </div>
-      </div>
+        </template>
+        <el-table
+            :data="yearlyData.monthlyData.slice().reverse()"
+            stripe
+            style="width: 100%"
+            v-loading="loading.yearly"
+        >
+          <el-table-column prop="month" label="月份" width="100">
+            <template #default="{ row }">
+              {{ row.year }}-{{ row.month.toString().padStart(2, '0') }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="totalCount" label="检测总数" align="center" />
+          <el-table-column prop="passCount" label="合格数" align="center">
+            <template #default="{ row }">
+              <el-tag type="success">{{ row.passCount }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="failCount" label="不合格数" align="center">
+            <template #default="{ row }">
+              <el-tag type="danger">{{ row.failCount }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="passRate" label="合格率" align="center">
+            <template #default="{ row }">
+              <el-progress
+                  :percentage="row.passRate"
+                  :stroke-width="16"
+                  :color="getProgressColor(row.passRate)"
+                  :show-text="false"
+              />
+              <span>{{ row.passRate }}%</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="趋势" width="100" align="center">
+            <template #default="{ row, $index }">
+              <el-icon v-if="getTrendIcon(row, $index)" :color="getTrendColor(row, $index)" size="20">
+                <component :is="getTrendIcon(row, $index)" />
+              </el-icon>
+              <span v-else>—</span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import * as echarts from 'echarts';
+import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
+import {
+  Refresh,
+  DataAnalysis,
+  CircleCheck,
+  Opportunity,
+  Cpu,
+  Loading,
+  Top,
+  Bottom,
+  Right
+} from '@element-plus/icons-vue'
+import overviewAPI from '@/api/OverView.js'
 
-// 当前时间
-const currentTime = ref('');
-// 数据概览
-const overviewData = ref([
-  { icon: 'fas fa-ruler', label: '平均直径', value: 0.52, unit: 'mm', trend: 1.2, color: '#36a2eb' },
-  { icon: 'fas fa-tachometer-alt', label: '生产速度', value: 45, unit: 'm/min', trend: 2.8, color: '#4cc0c0' },
-  { icon: 'fas fa-check-circle', label: '合格率', value: 98.3, unit: '%', trend: 0.4, color: '#ffce56' },
-  { icon: 'fas fa-exclamation-triangle', label: '缺陷率', value: 1.2, unit: '%', trend: -0.3, color: '#ff6384' },
-  { icon: 'fas fa-thermometer-half', label: '温度', value: 68, unit: '°C', trend: 0.7, color: '#9966ff' },
-  { icon: 'fas fa-bolt', label: '电压', value: 380, unit: 'V', trend: -0.1, color: '#ff9f40' }
-]);
-
-// 报警信息
-const alarms = ref([
-  { level: 1, levelText: '紧急', title: '3#生产线直径超标', time: '10:25:36', location: '3号线-张力区' },
-  { level: 2, levelText: '警告', title: '5#生产线温度异常', time: '10:18:12', location: '5号线-加热区' },
-  { level: 3, levelText: '注意', title: '2#生产线速度波动', time: '09:56:44', location: '2号线-驱动区' }
-]);
-
-// 生产统计
-const productionStats = ref({
-  today: '125,680',
-  month: '3,568,420'
-});
+// 响应式数据
+const yearlyData = ref({ monthlyData: [] })
+const scenarioData = ref([])
+const overallData = ref({
+  totalDetectionCount: 0,
+  currentMonthCount: 0,
+  lastMonthCount: 0,
+  totalScenarioCount: 0,
+  totalDeviceCount: 0,
+  totalPassCount: 0,
+  totalFailCount: 0,
+  totalPassRate: 0,
+  currentMonthPassCount: 0,
+  currentMonthFailCount: 0,
+  currentMonthPassRate: 0
+})
+const scenarioTimeRange = ref('this_month')
+const lastUpdated = ref('刚刚')
+const refreshing = ref(false)
+const loading = ref({
+  yearly: false,
+  scenario: false,
+  overall: false
+})
 
 // 图表引用
-const diameterChart = ref(null);
-const defectChart = ref(null);
-const qualityChart = ref(null);
+const yearlyChartRef = ref(null)
+const scenarioChartRef = ref(null)
+let yearlyChart = null
+let scenarioChart = null
 
-// 图表实例
-let diameterChartInstance = null;
-let defectChartInstance = null;
-let qualityChartInstance = null;
+// 初始化数据
+const fetchAllData = async () => {
+  try {
+    refreshing.value = true
+    await Promise.all([
+      fetchYearlyData(),
+      fetchScenarioData(),
+      fetchOverallData()
+    ])
+    lastUpdated.value = new Date().toLocaleTimeString()
+    ElMessage.success('数据刷新成功')
+  } catch (error) {
+    ElMessage.error('数据刷新失败: ' + error.message)
+  } finally {
+    refreshing.value = false
+  }
+}
 
-// 更新时间
-const updateTime = () => {
-  const now = new Date();
-  currentTime.value = now.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }).replace(/\//g, '-');
-};
+// 刷新数据
+const refreshAllData = () => {
+  fetchAllData()
+}
 
-// 初始化直径图表
-const initDiameterChart = () => {
-  if (diameterChart.value) {
-    diameterChartInstance = echarts.init(diameterChart.value);
-
-    const categories = [];
-    const data = [];
-
-    // 生成24个时间点（每小时）
-    for (let i = 0; i < 24; i++) {
-      categories.push(`${i}:00`);
-      // 生成0.50-0.55之间的随机值
-      data.push((Math.random() * 0.05 + 0.50).toFixed(3));
+// 获取年度数据
+const fetchYearlyData = async () => {
+  loading.value.yearly = true
+  try {
+    const response = await overviewAPI.getYearlyStatistics()
+    if (response.code === 'success') {
+      yearlyData.value = response.data
+      // 渲染图表
+      nextTick(() => {
+        renderYearlyChart()
+      })
     }
+  } catch (error) {
+    ElMessage.error('获取年度统计数据失败: ' + error.message)
+  } finally {
+    loading.value.yearly = false
+  }
+}
 
-    const option = {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'axis',
-        formatter: '{b} : {c} mm'
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: categories,
-        axisLine: {
-          lineStyle: {
-            color: '#4a5e7a'
-          }
-        },
-        axisLabel: {
-          color: '#a0b1c5'
+// 获取场景数据
+const fetchScenarioData = async () => {
+  loading.value.scenario = true
+  try {
+    const response = await overviewAPI.getScenarioStatistics(scenarioTimeRange.value)
+    if (response.code === 'success') {
+      scenarioData.value = response.data.scenarioData
+    }
+  } catch (error) {
+    ElMessage.error('获取应用场景数据失败: ' + error.message)
+  } finally {
+    loading.value.scenario = false
+    setTimeout(() => {
+      if (!loading.value.scenario && scenarioChartRef.value) {
+        renderScenarioChart();
+      }
+    }, 100);
+  }
+}
+
+// 获取总体数据
+const fetchOverallData = async () => {
+  loading.value.overall = true
+  try {
+    const response = await overviewAPI.getOverallStatistics()
+    if (response.code === 'success') {
+      overallData.value = response.data
+    }
+  } catch (error) {
+    ElMessage.error('获取系统总体数据失败: ' + error.message)
+  } finally {
+    loading.value.overall = false
+  }
+}
+
+// 渲染年度图表
+const renderYearlyChart = () => {
+  if (!yearlyChartRef.value) return
+  if (yearlyChart) yearlyChart.dispose()
+
+  yearlyChart = echarts.init(yearlyChartRef.value)
+
+  const months = yearlyData.value.monthlyData.map(item =>
+      `${item.year}-${item.month.toString().padStart(2, '0')}`
+  ).reverse()
+
+  const passCounts = yearlyData.value.monthlyData.map(item => item.passCount).reverse()
+  const failCounts = yearlyData.value.monthlyData.map(item => item.failCount).reverse()
+  const passRates = yearlyData.value.monthlyData.map(item => item.passRate).reverse()
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        label: {
+          backgroundColor: '#6a7985'
         }
-      },
-      yAxis: {
+      }
+    },
+    legend: {
+      data: ['合格数', '不合格数', '合格率'],
+      bottom: 10
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '15%',
+      top: '10%',
+      containLabel: true
+    },
+    xAxis: [
+      {
+        type: 'category',
+        boundaryGap: false,
+        data: months
+      }
+    ],
+    yAxis: [
+      {
         type: 'value',
-        min: 0.49,
-        max: 0.56,
+        name: '数量',
+        position: 'left',
+        alignTicks: true,
         axisLine: {
           show: true,
           lineStyle: {
-            color: '#4a5e7a'
+            color: '#5470C6'
           }
-        },
-        splitLine: {
-          lineStyle: {
-            color: 'rgba(74, 94, 122, 0.3)'
-          }
-        },
-        axisLabel: {
-          formatter: '{value} mm',
-          color: '#a0b1c5'
         }
       },
-      series: [
-        {
-          name: '线材直径',
-          type: 'line',
-          data: data,
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          lineStyle: {
-            width: 3,
-            color: '#36a2eb'
-          },
-          itemStyle: {
-            color: '#36a2eb'
-          },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(54, 162, 235, 0.5)' },
-              { offset: 1, color: 'rgba(54, 162, 235, 0.1)' }
-            ])
-          }
-        },
-        {
-          name: '上限',
-          type: 'line',
-          data: Array(24).fill(0.55),
-          lineStyle: {
-            width: 1,
-            type: 'dashed',
-            color: '#ff6384'
-          },
-          silent: true
-        },
-        {
-          name: '下限',
-          type: 'line',
-          data: Array(24).fill(0.50),
-          lineStyle: {
-            width: 1,
-            type: 'dashed',
-            color: '#ff6384'
-          },
-          silent: true
-        }
-      ]
-    };
-
-    diameterChartInstance.setOption(option);
-  }
-};
-
-// 初始化缺陷分布图表
-const initDefectChart = () => {
-  if (defectChart.value) {
-    defectChartInstance = echarts.init(defectChart.value);
-
-    const data = [
-      { value: 42, name: '表面划伤', color: '#ff6384' },
-      { value: 28, name: '直径偏差', color: '#36a2eb' },
-      { value: 15, name: '氧化斑点', color: '#ffce56' },
-      { value: 9, name: '材质不均', color: '#4cc0c0' },
-      { value: 6, name: '其他缺陷', color: '#9966ff' }
-    ];
-
-    const option = {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'item',
-        formatter: '{a} <br/>{b}: {c} ({d}%)'
-      },
-      legend: {
-        orient: 'vertical',
-        right: 10,
-        top: 'center',
-        textStyle: {
-          color: '#a0b1c5'
-        }
-      },
-      series: [
-        {
-          name: '缺陷类型',
-          type: 'pie',
-          radius: ['40%', '70%'],
-          avoidLabelOverlap: false,
-          itemStyle: {
-            borderRadius: 10,
-            borderColor: '#0f1c2e',
-            borderWidth: 2
-          },
-          label: {
-            show: false
-          },
-          emphasis: {
-            label: {
-              show: true,
-              fontSize: '14',
-              fontWeight: 'bold',
-              color: '#fff'
-            }
-          },
-          labelLine: {
-            show: false
-          },
-          data: data
-        }
-      ]
-    };
-
-    defectChartInstance.setOption(option);
-  }
-};
-
-// 初始化合格率图表
-const initQualityChart = () => {
-  if (qualityChart.value) {
-    qualityChartInstance = echarts.init(qualityChart.value);
-
-    const categories = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-    const data = [];
-
-    // 生成每月合格率数据 (95% - 99%之间)
-    for (let i = 0; i < 12; i++) {
-      data.push((Math.random() * 4 + 95).toFixed(1));
-    }
-
-    const option = {
-      backgroundColor: 'transparent',
-      tooltip: {
-        trigger: 'axis',
-        formatter: '{b} : {c}%'
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: categories,
-        axisLine: {
-          lineStyle: {
-            color: '#4a5e7a'
-          }
-        },
-        axisLabel: {
-          color: '#a0b1c5'
-        }
-      },
-      yAxis: {
+      {
         type: 'value',
-        min: 94,
+        name: '合格率 (%)',
+        min: 0,
         max: 100,
+        position: 'right',
         axisLine: {
           show: true,
           lineStyle: {
-            color: '#4a5e7a'
-          }
-        },
-        splitLine: {
-          lineStyle: {
-            color: 'rgba(74, 94, 122, 0.3)'
+            color: '#91CC75'
           }
         },
         axisLabel: {
-          formatter: '{value}%',
-          color: '#a0b1c5'
+          formatter: '{value}%'
+        }
+      }
+    ],
+    series: [
+      {
+        name: '合格数',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '40%',
+        emphasis: {
+          focus: 'series'
+        },
+        data: passCounts,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#83bff6' },
+            { offset: 0.5, color: '#188df0' },
+            { offset: 1, color: '#188df0' }
+          ])
         }
       },
-      series: [
-        {
-          name: '合格率',
-          type: 'bar',
-          data: data,
-          itemStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#4cc0c0' },
-              { offset: 1, color: '#36a2eb' }
-            ])
-          },
-          barWidth: '60%'
+      {
+        name: '不合格数',
+        type: 'bar',
+        stack: 'total',
+        barWidth: '40%',
+        emphasis: {
+          focus: 'series'
+        },
+        data: failCounts,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: '#f56c6c' },
+            { offset: 0.5, color: '#f56c6c' },
+            { offset: 1, color: '#c45656' }
+          ])
         }
-      ]
-    };
-
-    qualityChartInstance.setOption(option);
+      },
+      {
+        name: '合格率',
+        type: 'line',
+        yAxisIndex: 1,
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: {
+          width: 3
+        },
+        itemStyle: {
+          color: '#91CC75'
+        },
+        data: passRates
+      }
+    ]
   }
-};
 
-// 更新实时数据
-const updateRealtimeData = () => {
-  // 更新概览数据
-  overviewData.value.forEach(item => {
-    // 根据数据类型生成不同的随机波动
-    let fluctuation = 0;
-    switch(item.label) {
-      case '平均直径':
-        fluctuation = (Math.random() - 0.5) * 0.005;
-        item.value = Math.max(0.49, Math.min(0.55, parseFloat(item.value) + fluctuation));
-        break;
-      case '生产速度':
-        fluctuation = (Math.random() - 0.5) * 2;
-        item.value = Math.max(30, Math.min(60, parseInt(item.value) + fluctuation));
-        break;
-      case '合格率':
-        fluctuation = (Math.random() - 0.5) * 0.2;
-        item.value = Math.max(97.5, Math.min(99.5, parseFloat(item.value) + fluctuation)).toFixed(1);
-        break;
-      case '缺陷率':
-        fluctuation = (Math.random() - 0.5) * 0.1;
-        item.value = Math.max(0.5, Math.min(2.0, parseFloat(item.value) + fluctuation)).toFixed(1);
-        break;
-      case '温度':
-        fluctuation = (Math.random() - 0.5) * 2;
-        item.value = Math.max(65, Math.min(75, parseInt(item.value) + fluctuation));
-        break;
-      case '电压':
-        fluctuation = (Math.random() - 0.5) * 5;
-        item.value = Math.max(375, Math.min(385, parseInt(item.value) + fluctuation));
-        break;
+  yearlyChart.setOption(option)
+
+  // 响应窗口变化
+  window.addEventListener('resize', handleYearlyChartResize)
+}
+
+// 渲染场景图表
+const renderScenarioChart = () => {
+  console.log(scenarioChartRef.value)
+  if (!scenarioChartRef.value) return
+
+  if (scenarioChart) scenarioChart.dispose()
+  scenarioChart = echarts.init(scenarioChartRef.value)
+
+  const data = scenarioData.value.map(item => ({
+    value: item.scenarioCount,
+    name: item.scenarioName,
+    itemStyle: {
+      color: getRandomColor()
     }
+  }))
 
-    // 更新趋势 (随机生成-0.5%到0.5%之间的变化)
-    item.trend = (Math.random() - 0.5).toFixed(1);
-  });
-
-  // 更新生产统计
-  productionStats.value.today = (parseInt(productionStats.value.today.replace(/,/g, '')) + Math.floor(Math.random() * 50)).toLocaleString();
-
-  // 更新图表数据
-  if (diameterChartInstance) {
-    const option = diameterChartInstance.getOption();
-    const newData = option.series[0].data.map(value => {
-      const fluctuation = (Math.random() - 0.5) * 0.003;
-      return Math.max(0.49, Math.min(0.55, parseFloat(value) + fluctuation)).toFixed(3);
-    });
-    option.series[0].data = newData;
-    diameterChartInstance.setOption(option);
+  const option = {
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
+    },
+    legend: {
+      type: 'scroll',
+      orient: 'vertical',
+      right: 10,
+      top: 20,
+      bottom: 20,
+    },
+    series: [
+      {
+        name: '应用场景',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['40%', '50%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 10,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: '16',
+            fontWeight: 'bold',
+            formatter: '{b}\n{c}次 ({d}%)'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: data
+      }
+    ]
   }
-};
 
-// 初始化
+  scenarioChart.setOption(option)
+
+  // 响应窗口变化
+  window.addEventListener('resize', handleScenarioChartResize)
+}
+
+// 工具函数
+const formatNumber = (num) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
+const getRandomColor = () => {
+  const colors = [
+    '#5470C6', '#91CC75', '#FAC858', '#EE6666',
+    '#73C0DE', '#3BA272', '#FC8452', '#9A60B4',
+    '#EA7CCC', '#D7504B', '#C6E579', '#F4E001',
+    '#F0805A', '#26C0C0'
+  ]
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+const getProgressColor = (rate) => {
+  if (rate >= 95) return '#67c23a'
+  if (rate >= 85) return '#e6a23c'
+  return '#f56c6c'
+}
+
+const getTrendIcon = (row, index) => {
+  if (index === 0) return null // 没有上个月数据
+
+  const prevRow = yearlyData.value.monthlyData[index + 1]
+  if (!prevRow) return null
+
+  if (row.passRate > prevRow.passRate) return Top
+  if (row.passRate < prevRow.passRate) return Bottom
+  return Right
+}
+
+const getTrendColor = (row, index) => {
+  if (index === 0) return '' // 没有上个月数据
+
+  const prevRow = yearlyData.value.monthlyData[index + 1]
+  if (!prevRow) return ''
+
+  if (row.passRate > prevRow.passRate) return '#67c23a'
+  if (row.passRate < prevRow.passRate) return '#f56c6c'
+  return '#409eff'
+}
+
+// 图表响应式调整
+const handleYearlyChartResize = () => {
+  if (yearlyChart) {
+    yearlyChart.resize()
+  }
+}
+
+const handleScenarioChartResize = () => {
+  if (scenarioChart) {
+    scenarioChart.resize()
+  }
+}
+
+// 生命周期钩子
 onMounted(() => {
-  // 初始化时间
-  updateTime();
-  setInterval(updateTime, 1000);
+  fetchAllData()
+})
 
-  // 初始化图表
-  initDiameterChart();
-  initDefectChart();
-  initQualityChart();
-
-  // 初始化数据更新定时器
-  setInterval(updateRealtimeData, 3000);
-
-  // 响应窗口大小变化
-  window.addEventListener('resize', () => {
-    diameterChartInstance && diameterChartInstance.resize();
-    defectChartInstance && defectChartInstance.resize();
-    qualityChartInstance && qualityChartInstance.resize();
-  });
-});
-
-// 清理
 onBeforeUnmount(() => {
-  diameterChartInstance && diameterChartInstance.dispose();
-  defectChartInstance && defectChartInstance.dispose();
-  qualityChartInstance && qualityChartInstance.dispose();
-});
+  // 移除事件监听
+  window.removeEventListener('resize', handleYearlyChartResize)
+  window.removeEventListener('resize', handleScenarioChartResize)
+
+  // 销毁图表实例
+  if (yearlyChart) {
+    yearlyChart.dispose()
+    yearlyChart = null
+  }
+  if (scenarioChart) {
+    scenarioChart.dispose()
+    scenarioChart = null
+  }
+})
 </script>
 
 <style scoped>
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+.overview-page {
+  padding: 20px;
+  background: #f8faff;
+  min-height: 100vh;
 }
 
-.dashboard-container {
+.page-header-custom {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 2px solid #e6f0ff;
+}
+
+.header-content {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #0f1c2e 0%, #1d3a5f 100%);
-  color: #e0f0ff;
-  overflow: hidden;
-  padding: 20px;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a3a6e;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #5b7ba8;
+}
+
+.header-stats {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.overview-cards {
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid #e6f0ff;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.15);
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  padding: 16px 0;
+}
+
+.card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 28px;
+  color: white;
+}
+
+.total-icon {
+  background: linear-gradient(135deg, #409eff, #367bd6);
+}
+
+.pass-icon {
+  background: linear-gradient(135deg, #67c23a, #529b2f);
+}
+
+.scenario-icon {
+  background: linear-gradient(135deg, #e6a23c, #cf9234);
+}
+
+.device-icon {
+  background: linear-gradient(135deg, #f56c6c, #d65a5a);
+}
+
+.card-info {
+  flex: 1;
+}
+
+.card-title {
+  font-size: 14px;
+  color: #5b7ba8;
+  margin-bottom: 6px;
+}
+
+.card-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a3a6e;
+}
+
+.chart-container {
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  border: 1px solid #e6f0ff;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: #1a3a6e;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.chart-wrapper {
   position: relative;
 }
 
-/* 科技感背景效果 */
-.dashboard-container::before {
-  content: "";
+.loading-chart {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-      radial-gradient(circle at 20% 30%, rgba(54, 162, 235, 0.1) 0%, transparent 40%),
-      radial-gradient(circle at 80% 70%, rgba(255, 99, 132, 0.1) 0%, transparent 40%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.dashboard-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  background: rgba(16, 33, 54, 0.7);
-  border-radius: 10px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  position: relative;
-  z-index: 1;
-  border: 1px solid rgba(64, 158, 255, 0.2);
-}
-
-.title {
-  font-size: 28px;
-  font-weight: bold;
-  background: linear-gradient(90deg, #36a2eb, #4cc0c0);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 10px rgba(54, 162, 235, 0.3);
-  letter-spacing: 1px;
-}
-
-.header-info {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.status-indicator {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
-
-.status-indicator.online {
-  background-color: #4cc0c0;
-  box-shadow: 0 0 10px #4cc0c0;
-}
-
-.time-display {
-  font-size: 18px;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 5px 15px;
-  border-radius: 20px;
-  border: 1px solid rgba(64, 158, 255, 0.3);
-}
-
-.data-overview {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-  z-index: 1;
-}
-
-.data-card {
-  display: flex;
-  background: rgba(16, 33, 54, 0.7);
-  border-radius: 10px;
-  padding: 15px;
-  align-items: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(64, 158, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.data-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(54, 162, 235, 0.4);
-  border-color: rgba(54, 162, 235, 0.4);
-}
-
-.data-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-right: 15px;
-  font-size: 20px;
-  color: white;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10;
 }
 
-.data-content {
-  flex: 1;
-}
-
-.data-value {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.data-label {
-  font-size: 14px;
-  color: #a0b1c5;
-}
-
-.data-trend {
-  font-size: 14px;
-  padding: 3px 8px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.data-trend.up {
-  color: #4cc0c0;
-}
-
-.data-trend.down {
-  color: #ff6384;
-}
-
-.chart-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  flex: 1;
-  margin-bottom: 20px;
-  z-index: 1;
-}
-
-.chart-wrapper {
-  background: rgba(16, 33, 54, 0.7);
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(64, 158, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-}
-
-.chart-title {
-  font-size: 16px;
-  font-weight: bold;
+.loading-chart .el-icon {
+  font-size: 32px;
   margin-bottom: 10px;
-  color: #a0b1c5;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(74, 94, 122, 0.5);
+  color: #409eff;
+  animation: rotating 2s linear infinite;
 }
 
-.chart {
-  height: 100%;
-  min-height: 250px;
-}
-
-.alarm-container {
-  background: rgba(16, 33, 54, 0.7);
-  border-radius: 10px;
-  padding: 15px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(64, 158, 255, 0.1);
-  z-index: 1;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #a0b1c5;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(74, 94, 122, 0.5);
-}
-
-.alarm-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.alarm-item {
-  display: flex;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-  padding: 12px 15px;
-  transition: all 0.3s ease;
-}
-
-.alarm-item:hover {
-  background: rgba(16, 33, 54, 0.9);
-  transform: translateX(5px);
-}
-
-.alarm-level {
-  width: 70px;
-  text-align: center;
-  padding: 5px;
-  border-radius: 5px;
-  font-weight: bold;
-  font-size: 14px;
-  margin-right: 15px;
-}
-
-.level-1 {
-  background: rgba(255, 99, 132, 0.3);
-  color: #ff6384;
-  border: 1px solid #ff6384;
-}
-
-.level-2 {
-  background: rgba(255, 206, 86, 0.3);
-  color: #ffce56;
-  border: 1px solid #ffce56;
-}
-
-.level-3 {
-  background: rgba(54, 162, 235, 0.3);
-  color: #36a2eb;
-  border: 1px solid #36a2eb;
-}
-
-.alarm-content {
-  flex: 1;
-}
-
-.alarm-title {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-.alarm-time {
-  font-size: 12px;
-  color: #a0b1c5;
-}
-
-.alarm-location {
-  width: 150px;
-  color: #a0b1c5;
-  font-size: 14px;
-}
-
-.alarm-action {
-  background: rgba(54, 162, 235, 0.3);
-  color: #36a2eb;
-  border: 1px solid #36a2eb;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.alarm-action:hover {
-  background: rgba(54, 162, 235, 0.5);
-}
-
-.dashboard-footer {
-  display: flex;
-  justify-content: space-between;
-  background: rgba(16, 33, 54, 0.7);
-  border-radius: 10px;
-  padding: 15px 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(64, 158, 255, 0.1);
-  z-index: 1;
-}
-
-.system-status, .production-stats {
-  display: flex;
-  gap: 30px;
-}
-
-.status-item, .stat-item {
-  display: flex;
-  gap: 10px;
-  font-size: 14px;
-  color: #a0b1c5;
-}
-
-.status-value, .stat-value {
-  color: #e0f0ff;
-  font-weight: bold;
-}
-
-.status-value.active {
-  color: #4cc0c0;
-}
-
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .data-overview {
-    grid-template-columns: repeat(2, 1fr);
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
   }
-
-  .chart-container {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .chart-container > div:last-child {
-    grid-column: span 2;
+  to {
+    transform: rotate(360deg);
   }
 }
 
+.monthly-table {
+  margin-top: 20px;
+}
+
+.table-header {
+  font-weight: 600;
+  color: #1a3a6e;
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
-  .data-overview {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-container {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-container > div:last-child {
-    grid-column: span 1;
-  }
-
-  .dashboard-footer {
+  .page-header-custom {
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
+  }
+
+  .header-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .stat-card {
+    margin-bottom: 10px;
+  }
+
+  .card-content {
+    padding: 12px 0;
+  }
+
+  .card-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+
+  .card-value {
+    font-size: 20px;
   }
 }
 </style>

@@ -18,7 +18,7 @@
             <div v-else class="ai-avatar">AI</div>
           </div>
           <div class="content">
-            <div class="name">{{ message.role === 'user' ? userInfo.name : '用户' }}</div>
+            <div class="name">{{ message.role === 'user' ? userInfo.name : '决策助手' }}</div>
             <div class="text">
               <!-- 使用 v-html 渲染 Markdown 转换后的内容 -->
               <div v-if="message.isFormatted" v-html="message.formattedContent"></div>
@@ -115,14 +115,7 @@ export default {
 
     // 系统提示词 - 限制AI回答范围
     const systemPrompt = `
-      你是一个金属微细线材检测平台的智能助手，专门帮助用户解答关于线材检测的问题。
-      请遵循以下规则：
-      1. 只回答与金属线材检测相关的问题，如线径测量、拉伸强度测试、电导率分析等
-      2. 对于非技术问题，礼貌地引导用户询问检测相关问题
-      3. 回答要专业、简洁，使用工程术语
-      4. 如果用户询问检测标准，请参考ASTM B3、IEC 60228等国际标准
-      5. 不要提供任何与检测无关的信息
-      6. 使用中文回答所有问题
+      你是一个聪明的人
     `;
 
     // 打字机效果的定时器
