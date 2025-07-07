@@ -181,5 +181,18 @@ export default {
             console.error('登录失败', error.response?.data);
             throw error;
         }
+    },
+
+    async UserLogout(token) {
+        try {
+            return await auth.get('/logout', {
+                params: {
+                    token:token
+                }
+            });
+        } catch (error) {
+            console.error('错误：', error.response?.data);
+            throw error;
+        }
     }
 };

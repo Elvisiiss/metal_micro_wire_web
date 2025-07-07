@@ -187,6 +187,7 @@ const closeUserSettings = () => {
 // 退出登录
 const logout = () => {
   showDropdown.value = false;
+  AuthAPI.UserLogout(authStore.user?.token)
   authStore.clearUser();
   router.push('/login');
 }
