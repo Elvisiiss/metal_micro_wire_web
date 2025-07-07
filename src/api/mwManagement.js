@@ -48,7 +48,7 @@ export default {
     // 根据批次号查询线材信息
     async getWireMaterialByBatchNumber(batchNumber) {
         try {
-            const response = await mwAPI.get(`/${batchNumber}`);
+            const response = await mwAPI.get(`/info/${batchNumber}`);
             return response.data;
         } catch (error) {
             console.error('查询线材信息失败', error.response?.data);

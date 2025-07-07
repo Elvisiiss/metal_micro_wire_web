@@ -14,7 +14,8 @@
       <div class="navbar-right">
         <div class="user-profile" @click="toggleDropdown">
           <div class="user-avatar">
-            <img :src="userAvatar" alt="用户头像">
+            <img v-if="userAvatar" :src="userAvatar" alt="用户头像">
+            <div v-else class="avatar-placeholder">{{ userNameInitial }}</div>
           </div>
           <div class="user-info">
             <span class="user-name">{{ user_name }}</span>
@@ -67,7 +68,7 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import RootIndexPage from '../Root/RootIndexPage.vue';
 import UserSettings from '@/views/Public/UserSettings.vue';
 import { useRouter } from 'vue-router';
@@ -80,7 +81,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const showDropdown = ref(false);
 const showUserSettings = ref(false); // 控制悬浮窗显示
-const user_name = authStore.user?.user_name;
+const user_name = authStore.user?.user_name || '用户';
 
 
 // 生命周期钩子
@@ -101,7 +102,7 @@ onMounted(async () => {
 
 
 // 用户头像
-const userAvatar = ref('http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12');
+const userAvatar = computed(() => authStore.user?.avatarUrl || '');
 
 // 活动标签
 const activeTab = ref('RootIndexPage');
@@ -121,6 +122,10 @@ const openUserSettings = () => {
   showDropdown.value = false;
   showUserSettings.value = true;
 };
+
+const userNameInitial = computed(() => {
+  return authStore.user?.user_name?.charAt(0)?.toUpperCase() || '';
+});
 
 // 关闭账号信息悬浮窗
 const closeUserSettings = () => {
@@ -498,4 +503,17 @@ const logout = () => {
   }
 }
 
+
+.user-avatar .avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff, #367bd6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+}
 </style>

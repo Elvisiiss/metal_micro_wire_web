@@ -24,7 +24,8 @@
         </button>
         <div class="user-profile" @click.stop="toggleDropdown" ref="userProfileRef">
           <div class="user-avatar">
-            <img :src="userAvatar" alt="用户头像">
+            <img v-if="userAvatar" :src="userAvatar" alt="用户头像">
+            <div v-else class="avatar-placeholder">{{ userNameInitial }}</div>
           </div>
           <div class="user-info">
             <span class="user-name">{{ user_name }} ({{ authStore.user?.role_id === 1 ? '管理员' : '普通用户' }})</span>
@@ -119,7 +120,7 @@ import {
   SwitchButton
 } from '@element-plus/icons-vue'
 
-import {onMounted, ref, onBeforeUnmount} from 'vue';
+import {onMounted, ref, onBeforeUnmount, computed} from 'vue';
 import Overview from './Overview.vue';
 import DataScreen from './DataScreen.vue';
 import ChatView from './ChatView.vue';
@@ -151,8 +152,12 @@ const goToDataScreen = () => {
   router.push('/data-screen')
 }
 
+const userNameInitial = computed(() => {
+  return authStore.user?.user_name?.charAt(0)?.toUpperCase() || '';
+});
+
 // 用户头像
-const userAvatar = ref('http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12');
+const userAvatar = computed(() => authStore.user?.avatar_url || '');
 
 // 活动标签
 const activeTab = ref('dashboard');
@@ -574,5 +579,18 @@ onBeforeUnmount(() => {
 .data-screen-btn .el-icon {
   margin-right: 6px;
   font-size: 16px;
+}
+
+.user-avatar .avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff, #367bd6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 18px; /* 根据头像大小调整 */
+  font-weight: bold;
 }
 </style>

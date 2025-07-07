@@ -353,10 +353,10 @@ export default {
     const fetchData = async () => {
       try {
         // 实际项目中调用API
-        // const summaryRes = await DataScreenAPI.getDashboardSummary();
-        // const trendRes = await DataScreenAPI.getPassRateTrend();
-        // const scenarioRes = await DataScreenAPI.getScenarioDistribution();
-        // const deviceRes = await DataScreenAPI.getDeviceStatus();
+        const summaryRes = await DataScreenAPI.getDashboardSummary();
+        const trendRes = await DataScreenAPI.getPassRateTrend();
+        const scenarioRes = await DataScreenAPI.getScenarioDistribution();
+        const deviceRes = await DataScreenAPI.getDeviceStatus();
 
         // 模拟数据
         mockData();

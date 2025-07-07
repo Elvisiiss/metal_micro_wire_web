@@ -11,11 +11,14 @@
         <div v-for="(message, index) in chatMessages" :key="index"
              :class="['message', message.role]">
           <div class="avatar">
-            <img v-if="message.role === 'user'" :src="userAvatar" alt="用户头像">
+            <template v-if="message.role === 'user'">
+              <img v-if="userAvatar" :src="userAvatar" alt="用户头像">
+              <div v-else class="avatar-placeholder">{{ userNameInitial }}</div>
+            </template>
             <div v-else class="ai-avatar">AI</div>
           </div>
           <div class="content">
-            <div class="name">{{ message.role === 'user' ? userInfo.name : '检测助手' }}</div>
+            <div class="name">{{ message.role === 'user' ? userInfo.name : '用户' }}</div>
             <div class="text">
               <!-- 使用 v-html 渲染 Markdown 转换后的内容 -->
               <div v-if="message.isFormatted" v-html="message.formattedContent"></div>
@@ -57,7 +60,10 @@
 </template>
 
 <script>
-import { ref, onMounted, nextTick } from 'vue';
+import {ref, onMounted, nextTick, computed} from 'vue';
+import { useAuthStore } from "@/stores/auth.js";
+
+const authStore = useAuthStore()
 
 // 简单的 Markdown 转 HTML 转换器
 function markdownToHtml(text) {
@@ -95,7 +101,7 @@ function markdownToHtml(text) {
 export default {
   setup() {
     // 用户头像
-    const userAvatar = ref('http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12');
+    const userAvatar = computed(() => authStore.user?.avatar_url || '');
 
     // 智能聊天相关数据
     const chatMessages = ref([]);
@@ -103,8 +109,8 @@ export default {
     const isLoading = ref(false);
     const messagesContainer = ref(null);
     const userInfo = ref({
-      name: '张工',
-      role: '管理员'
+      name: authStore.user?.user_name || '用户',
+      role: authStore.user?.role_id === 1 ? '管理员' : '普通用户'
     });
 
     // 系统提示词 - 限制AI回答范围
@@ -121,6 +127,10 @@ export default {
 
     // 打字机效果的定时器
     let typewriterTimer = null;
+
+    const userNameInitial = computed(() => {
+      return authStore.user?.user_name?.charAt(0)?.toUpperCase() || '';
+    });
 
     // 滚动到最新消息
     const scrollToBottom = () => {
@@ -612,5 +622,19 @@ export default {
     width: 40px;
     height: 40px;
   }
+
+  .avatar .avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #409eff, #367bd6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
 }
 </style>

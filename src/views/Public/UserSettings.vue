@@ -14,9 +14,17 @@
         <div class="card-body">
           <div class="avatar-section">
             <div class="avatar-wrapper">
-              <img :src="user.avatar" alt="用户头像" class="user-avatar">
+              <template v-if="user.avatarUrl">
+                <img :src="user.avatarUrl" alt="用户头像" class="user-avatar">
+                <button class="avatar-delete-btn" @click.stop="deleteAvatar">
+                  <i class="icon-delete">🗑️</i>
+                </button>
+              </template>
+              <div v-else class="avatar-placeholder">
+                {{ userNameInitial }}
+              </div>
               <button class="avatar-upload-btn" @click="triggerAvatarUpload">
-                <i class="icon-camera"></i>
+                <i class="icon-camera">📷</i>
               </button>
               <input
                   type="file"
@@ -28,23 +36,37 @@
             </div>
             <div class="avatar-info">
               <p class="username">{{ user.username }}</p>
-              <p class="user-role">{{ authStore.user?.role_id === 1 ? '管理员' : '普通用户' }}</p>
+              <p class="user-role">{{ user.roleId === 1 ? '管理员' : '普通用户' }}</p>
             </div>
           </div>
 
           <div class="info-form">
             <div class="form-group">
               <label>用户名</label>
-              <input type="text" v-model="user.username">
+              <el-input
+                  type="text"
+                  v-model="user.username"
+                  placeholder="请输入新用户名"
+              />
             </div>
             <div class="form-group">
               <label>邮箱</label>
-              <input type="email" v-model="user.email" disabled>
+              <el-input
+                  type="email"
+                  v-model="user.email"
+                  disabled
+              />
             </div>
           </div>
         </div>
         <div class="card-footer">
-          <button class="save-btn" @click="saveBasicInfo">保存更改</button>
+          <el-button
+              type="primary"
+              @click="saveBasicInfo"
+              :loading="saving"
+          >
+            保存更改
+          </el-button>
         </div>
       </div>
 
@@ -115,18 +137,21 @@
 </template>
 
 <script setup>
-import {ref, onMounted, computed, onBeforeUnmount} from 'vue'
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
+import userAPI from '@/api/user.js'
 import api from '@/api/auth.js'
 
 const authStore = useAuthStore()
 
 // 用户数据
 const user = ref({
-  username: '用户名',
-  email: '用户邮箱',
-  avatar: 'http://10.168.82.63:8089\\1\\212ca163-59f7-45b7-9b4b-6649b37ace12'
+  userId: null,
+  username: '',
+  email: '',
+  avatarUrl: '',
+  roleId: 0
 })
 
 // 密码修改相关
@@ -145,21 +170,44 @@ let countdown = 60
 let countdownTimer = null
 
 const avatarInput = ref(null)
+const saving = ref(false)
+
+// 计算用户名首字母
+const userNameInitial = computed(() => {
+  return user.value.username?.charAt(0)?.toUpperCase() || ''
+})
 
 // 初始化用户数据
 onMounted(() => {
-  if (authStore.user) {
-    user.value.username = authStore.user.user_name || 'error'
-    user.value.email = authStore.user.e_mail || 'error'
-    password.value.email = authStore.user.e_mail || 'error'
-  }
+  fetchUserProfile()
 })
+
+// 获取用户资料
+const fetchUserProfile = async () => {
+  try {
+    const response = await userAPI.getUserProfile()
+    if (response.data.code === 'success') {
+      const profile = response.data.data
+      user.value = {
+        userId: profile.userId,
+        username: profile.userName,
+        email: profile.email,
+        avatarUrl: profile.avatarUrl,
+        roleId: profile.roleId
+      }
+    } else {
+      ElMessage.error('获取用户资料失败: ' + response.data.msg)
+    }
+  } catch (error) {
+    console.error('获取用户资料失败:', error)
+    ElMessage.error('获取用户资料失败')
+  }
+}
 
 // 打开密码修改模态框
 const openPasswordModal = () => {
-  // 重置表单
   password.value = {
-    email: authStore.user.e_mail || '',
+    email: user.value.email,
     code: '',
     new: '',
     confirm: ''
@@ -173,38 +221,93 @@ const triggerAvatarUpload = () => {
 }
 
 // 处理头像上传
-const handleAvatarUpload = (event) => {
+const handleAvatarUpload = async (event) => {
   const file = event.target.files[0]
-  if (file) {
-    if (!file.type.match('image.*')) {
-      ElMessage.error('请选择图片文件')
-      return
-    }
+  if (!file) return
 
-    if (file.size > 2 * 1024 * 1024) {
-      ElMessage.error('图片大小不能超过2MB')
-      return
-    }
+  // 验证文件类型
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+  if (!validTypes.includes(file.type)) {
+    ElMessage.error('只支持 JPG, PNG, GIF, WEBP 格式的图片')
+    return
+  }
 
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      user.value.avatar = e.target.result
-      ElMessage.success({
-        message: '头像更新成功',
-        zIndex: 3001  // 确保提示在悬浮窗之上
-      })
+  // 验证文件大小
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过2MB')
+    return
+  }
+
+  try {
+    const response = await userAPI.uploadAvatar(file)
+    if (response.data.code === 'success') {
+      user.value.avatarUrl = response.data.data.avatarUrl
+      // 更新全局用户状态
+      authStore.updateUserAvatar(response.data.data.avatarUrl)
+      ElMessage.success('头像上传成功')
+    } else {
+      ElMessage.error('头像上传失败: ' + response.data.msg)
     }
-    reader.readAsDataURL(file)
+  } catch (error) {
+    console.error('头像上传失败:', error)
+    ElMessage.error('头像上传失败')
+  } finally {
+    // 重置input以便再次选择同一文件
+    event.target.value = ''
+  }
+}
+
+// 删除头像
+const deleteAvatar = async () => {
+  try {
+    const response = await userAPI.deleteAvatar()
+    if (response.data.code === 'success') {
+      user.value.avatarUrl = ''
+      // 更新全局用户状态
+      authStore.updateUserAvatar('')
+      ElMessage.success('头像删除成功')
+    } else {
+      ElMessage.error('头像删除失败: ' + response.data.msg)
+    }
+  } catch (error) {
+    console.error('头像删除失败:', error)
+    ElMessage.error('头像删除失败')
   }
 }
 
 // 保存基本信息
-const saveBasicInfo = () => {
-  // 这里应该添加表单验证逻辑
-  ElMessage.success({
-    message: '基本信息已保存',
-    zIndex: 3001  // 确保提示在悬浮窗之上
-  })
+const saveBasicInfo = async () => {
+  if (!user.value.username) {
+    ElMessage.error('用户名不能为空')
+    return
+  }
+
+  if (user.value.username.length > 20) {
+    ElMessage.error('用户名长度不能超过20个字符')
+    return
+  }
+
+  if (/@/.test(user.value.username)) {
+    ElMessage.error('用户名不能包含@符号')
+    return
+  }
+
+  saving.value = true
+  try {
+    const response = await userAPI.updateUsername(user.value.username)
+    if (response.data.code === 'success') {
+      // 更新全局用户状态
+      authStore.updateUsername(user.value.username)
+      ElMessage.success('用户名修改成功')
+    } else {
+      ElMessage.error('用户名修改失败: ' + response.data.msg)
+    }
+  } catch (error) {
+    console.error('用户名修改失败:', error)
+    ElMessage.error('用户名修改失败')
+  } finally {
+    saving.value = false
+  }
 }
 
 // 发送验证码
@@ -213,21 +316,12 @@ const sendResetCode = async () => {
     const response = await api.sendResetPasswordCode(password.value.email)
     if (response.code === 'success') {
       startCountdown()
-      ElMessage.success({
-        message: '验证码已发送，请查收邮箱',
-        zIndex: 3001
-      })
+      ElMessage.success('验证码已发送，请查收邮箱')
     } else {
-      ElMessage.error({
-        message: response.msg || '发送验证码失败',
-        zIndex: 3001
-      })
+      ElMessage.error(response.msg || '发送验证码失败')
     }
   } catch (err) {
-    ElMessage.error({
-      message: '发送验证码失败，请稍后再试',
-      zIndex: 3001
-    })
+    ElMessage.error('发送验证码失败，请稍后再试')
   }
 }
 
@@ -253,34 +347,22 @@ const startCountdown = () => {
 const changePassword = async () => {
   // 表单验证
   if (!password.value.code) {
-    ElMessage.error({
-      message: '请输入验证码',
-      zIndex: 3001
-    })
+    ElMessage.error('请输入验证码')
     return
   }
 
   if (!password.value.new || !password.value.confirm) {
-    ElMessage.error({
-      message: '请输入新密码',
-      zIndex: 3001
-    })
+    ElMessage.error('请输入新密码')
     return
   }
 
   if (password.value.new !== password.value.confirm) {
-    ElMessage.error({
-      message: '两次输入的新密码不一致',
-      zIndex: 3001
-    })
+    ElMessage.error('两次输入的新密码不一致')
     return
   }
 
   if (password.value.new.length < 6) {
-    ElMessage.error({
-      message: '密码长度不能少于6位',
-      zIndex: 3001
-    })
+    ElMessage.error('密码长度不能少于6位')
     return
   }
 
@@ -293,22 +375,13 @@ const changePassword = async () => {
     )
 
     if (response.code === 'success') {
-      ElMessage.success({
-        message: '密码修改成功',
-        zIndex: 3001
-      })
+      ElMessage.success('密码修改成功')
       showPasswordModal.value = false
     } else {
-      ElMessage.error({
-        message: response.msg || '密码修改失败',
-        zIndex: 3001
-      })
+      ElMessage.error(response.msg || '密码修改失败')
     }
   } catch (error) {
-    ElMessage.error({
-      message: '密码修改失败，请稍后再试',
-      zIndex: 3001
-    })
+    ElMessage.error('密码修改失败，请稍后再试')
   }
 }
 
@@ -384,6 +457,19 @@ onBeforeUnmount(() => {
   object-fit: cover;
 }
 
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff, #367bd6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+}
+
 .avatar-upload-btn {
   position: absolute;
   right: 0;
@@ -398,10 +484,32 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  z-index: 10;
 }
 
 .avatar-upload-btn:hover {
   background-color: #66b1ff;
+}
+
+.avatar-delete-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.avatar-delete-btn:hover {
+  background-color: #ff7875;
 }
 
 .avatar-info .username {
@@ -432,44 +540,10 @@ onBeforeUnmount(() => {
   color: #666;
 }
 
-.form-group input {
-  width: 100%;
-  padding: 10px 15px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: border-color 0.3s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #409eff;
-}
-
-.form-group input:disabled {
-  background-color: #f5f7fa;
-  color: #999;
-}
-
 .card-footer {
   padding: 16px 20px;
   border-top: 1px solid #f0f0f0;
   text-align: right;
-}
-
-.save-btn {
-  padding: 8px 20px;
-  background-color: #409eff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.save-btn:hover {
-  background-color: #66b1ff;
 }
 
 .security-item {
@@ -529,9 +603,5 @@ onBeforeUnmount(() => {
 
 .code-button {
   white-space: nowrap;
-}
-
-.icon-camera::before {
-  content: "📷";
 }
 </style>

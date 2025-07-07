@@ -11,6 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
             e_mail: userData.e_mail,
             role_id: userData.role_id,
             token: userData.token,
+            avatar_url:userData.avatar_url
         }
         isAuthenticated.value = true
         localStorage.setItem('user', JSON.stringify(user.value))
@@ -21,6 +22,18 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = null
         isAuthenticated.value = false
         localStorage.removeItem('user')
+    }
+
+    function updateUserAvatar(avatar_url){
+        if (this.user) {
+            this.user.avatar_url = avatar_url;
+        }
+    }
+
+    function updateUsername(username){
+        if (this.user) {
+            this.user.user_name = username;
+        }
     }
 
     function loadUserFromStorage() {
@@ -37,5 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
         setUser,
         clearUser,
         loadUserFromStorage,
+        updateUserAvatar,
+        updateUsername
     }
 })
