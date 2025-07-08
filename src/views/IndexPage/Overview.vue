@@ -328,11 +328,11 @@ const renderYearlyChart = () => {
 
   const months = yearlyData.value.monthlyData.map(item =>
       `${item.year}-${item.month.toString().padStart(2, '0')}`
-  ).reverse()
+  )
 
-  const passCounts = yearlyData.value.monthlyData.map(item => item.passCount).reverse()
-  const failCounts = yearlyData.value.monthlyData.map(item => item.failCount).reverse()
-  const passRates = yearlyData.value.monthlyData.map(item => item.passRate).reverse()
+  const passCounts = yearlyData.value.monthlyData.map(item => item.passCount)
+  const failCounts = yearlyData.value.monthlyData.map(item => item.failCount)
+  const passRates = yearlyData.value.monthlyData.map(item => item.passRate)
 
   const option = {
     tooltip: {
@@ -349,8 +349,8 @@ const renderYearlyChart = () => {
       bottom: 10
     },
     grid: {
-      left: '3%',
-      right: '4%',
+      left: '5%',
+      right: '5%',
       bottom: '15%',
       top: '10%',
       containLabel: true
@@ -358,7 +358,7 @@ const renderYearlyChart = () => {
     xAxis: [
       {
         type: 'category',
-        boundaryGap: false,
+        boundaryGap: true,
         data: months
       }
     ],

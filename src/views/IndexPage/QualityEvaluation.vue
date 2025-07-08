@@ -3,7 +3,10 @@
     <!-- 质量评估管理 -->
 
     <div class="management-header">
-      <h3>质量评估管理</h3>
+      <div class="header-content">
+        <span class="page-title">质量评估管理</span>
+        <span class="page-subtitle">管理线材的评估结果</span>
+      </div>
       <div class="actions">
         <el-input v-model="scenarioCode" placeholder="输入场景代码" style="width: 200px" />
         <el-button
@@ -730,20 +733,20 @@ const formatDateTime = (dateString) => {
   right: 16px;
 }
 
-.el-table {
-  flex: 1;
-  overflow: auto;
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.el-pagination {
-  margin-top: 16px;
-  justify-content: flex-end;
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a3a6e;
 }
 
-/* 新增：置信度标签样式 */
-.confidence-label {
-  font-size: 12px;
-  color: #606266;
-  margin-bottom: 3px;
+.page-subtitle {
+  font-size: 14px;
+  color: #5b7ba8;
 }
 </style>

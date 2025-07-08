@@ -3,8 +3,8 @@
     <!-- 页面标题区域 -->
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">设备管理系统</h1>
-        <p class="page-subtitle">物联网设备监控与管理平台</p>
+        <span class="page-title">设备管理系统</span>
+        <span class="page-subtitle">物联网设备监控与管理平台</span>
       </div>
       <div class="header-stats">
         <div class="stat-item">
@@ -582,36 +582,29 @@ const formatDate = (dateString) => {
 }
 
 .page-header {
-  margin-bottom: 24px;
-  padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 2px solid #e6f0ff;
 }
 
 .header-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
   color: #1a3a6e;
-  margin: 0;
-  background: linear-gradient(90deg, #1a3a6e, #409eff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .page-subtitle {
-  font-size: 16px;
+  font-size: 14px;
   color: #5b7ba8;
-  margin: 0;
 }
 
 .header-stats {

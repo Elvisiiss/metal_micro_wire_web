@@ -41,10 +41,6 @@
               <i class="icon-user"></i>
               <span>账号信息</span>
             </div>
-            <div class="dropdown-item" @click="setActiveTab('Helps')">
-              <i class="icon-help"></i>
-              <span>帮助中心</span>
-            </div>
             <div class="dropdown-item" @click="setActiveTab('SystemConfig')">
               <i class="icon-settings"></i>
               <span>系统设置</span>
@@ -84,9 +80,6 @@
 
       <!-- 数据分析-->
       <ProblemTracing v-if="activeTab === 'ProblemTracing'"/>
-
-      <!-- 数据分析-->
-      <Helps v-if="activeTab === 'Helps'"/>
 
       <!-- 质量评估-->
       <QualityEvaluation v-if="activeTab === 'QualityEvaluation'"/>
@@ -136,7 +129,6 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import {ElMessage} from "element-plus";
 import ProblemTracing from "@/views/IndexPage/ProblemTracing.vue";
-import Helps from "@/views/Public/Helps.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();

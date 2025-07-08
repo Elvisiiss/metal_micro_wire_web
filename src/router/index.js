@@ -70,11 +70,6 @@ const router = createRouter({
             component: () => import('@/views/Public/UserSettings.vue')
         },
         {
-            path: '/help-center',
-            name: 'HelpCenter',
-            component: () => import('@/views/Public/Helps.vue')
-        },
-        {
             path: '/root',
             name: 'rootIndexPage',
             component: () => import('@/views/Root/RootDashboard.vue')

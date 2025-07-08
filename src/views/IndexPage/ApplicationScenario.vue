@@ -1,9 +1,11 @@
 <template>
   <div class="scenario-management">
     <!-- 页面标题 -->
-    <div class="page-header">
-      <h2>应用场景管理</h2>
-      <p>配置不同应用场景下线材的标准规范参数</p>
+    <div class="page-header-custom">
+      <div class="header-content">
+        <span class="page-title">系统仪表盘</span>
+        <span class="page-subtitle">金属微丝质量检测系统数据概览</span>
+      </div>
     </div>
 
     <!-- 操作栏 -->
@@ -662,5 +664,31 @@ onMounted(() => {
   margin-left: 5px;
   color: #606266;
   font-size: 14px;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a3a6e;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #5b7ba8;
+}
+
+.page-header-custom {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 2px solid #e6f0ff;
 }
 </style>

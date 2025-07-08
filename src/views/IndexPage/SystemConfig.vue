@@ -2,8 +2,10 @@
   <div class="system-config">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h1>系统设置</h1>
-      <p class="subtitle">管理系统配置和监控服务状态</p>
+      <div class="header-content">
+        <span class="page-title">系统设置</span>
+        <span class="page-subtitle">管理系统配置和监控服务状态</span>
+      </div>
     </div>
 
     <!-- 健康检查区域 -->
@@ -306,21 +308,29 @@ onMounted(() => {
 }
 
 .page-header {
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e6f0ff;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 2px solid #e6f0ff;
 }
 
-.page-header h1 {
-  font-size: 24px;
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
   color: #1a3a6e;
-  margin: 0;
 }
 
-.page-header .subtitle {
-  color: #5b7ba8;
-  margin-top: 8px;
+.page-subtitle {
   font-size: 14px;
+  color: #5b7ba8;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .card-header {

@@ -4,7 +4,7 @@
     <div class="page-header-custom">
       <div class="header-content">
         <span class="page-title">智能决策</span>
-        <span class="page-subtitle">基于DeepSeek大语言模型的智能对话系统</span>
+        <span class="page-subtitle">智能对话系统</span>
       </div>
       <div class="header-stats">
         <el-tag>会话数: {{ sessions.length }}</el-tag>
