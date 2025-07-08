@@ -89,8 +89,8 @@
                 placeholder="请输入密码"
                 required
               >
-              <button 
-                type="button" 
+              <button
+                type="button"
                 @click="togglePasswordVisibility"
                 class="password-toggle"
               >
@@ -120,7 +120,7 @@
                 placeholder="请输入验证码"
                 required
               >
-              <button 
+              <button
                 type="button"
                 @click="sendRegisterCode"
                 :disabled="codeButtonDisabled"
@@ -189,16 +189,16 @@ let countdown = 60;
 
 // 特性列表
 const features = computed(() => [
-  { 
+  {
     icon: 'GiftIcon',
     text: '免费注册永久使用'
   },
-  { 
-    icon: 'ShieldIcon', 
+  {
+    icon: 'ShieldIcon',
     text: '数据安全保护'
   },
-  { 
-    icon: 'RocketIcon', 
+  {
+    icon: 'RocketIcon',
     text: '快速开始体验'
   }
 ]);
@@ -229,12 +229,31 @@ const sendRegisterCode = async () => {
     }
 
     const response = await api.sendRegisterCode(form.value.email);
+
+    // 处理成功响应
     if (response.code === 'success') {
       startCountdown();
-    } else {
+    }
+    // 处理邮箱已存在的情况
+    else if (response.msg === "邮箱已存在") {
+      error.value = "该邮箱已被注册，请直接登录或使用其他邮箱";
+    }
+    // 处理参数验证失败
+    else if (response.msg === "请求参数验证失败" && response.data) {
+      // 提取具体的错误字段信息
+      const errorField = Object.keys(response.data)[0];
+      error.value = response.data[errorField];
+    }
+    // 其他错误
+    else {
       error.value = response.msg || '发送验证码失败';
     }
   } catch (err) {
+    if (error.value.includes("邮箱格式")) {
+      codeButtonDisabled.value = false;
+      codeButtonText.value = '获取验证码';
+      countdown = 60;
+    }
     error.value = err.response?.data?.msg || '发送验证码失败';
   }
 };
@@ -251,14 +270,38 @@ const handleRegister = async () => {
         form.value.code
     );
 
+    // 成功处理
     if (response.code === 'success') {
-      // 注册成功后可以自动登录或跳转到登录页
       router.push('/login');
-    } else {
+    }
+    // 处理用户名已存在
+    else if (response.msg === "用户名已存在") {
+      error.value = "该用户名已被使用，请更换其他用户名";
+    }
+    // 处理邮箱已存在
+    else if (response.msg === "邮箱已存在") {
+      error.value = "该邮箱已被注册，请直接登录或使用其他邮箱";
+    }
+    // 处理参数验证失败
+    else if (response.msg === "请求参数验证失败" && response.data) {
+      // 提取具体的错误字段信息
+      const errorField = Object.keys(response.data)[0];
+      error.value = response.data[errorField];
+    }
+    // 其他错误
+    else {
       error.value = response.msg || '注册失败';
     }
   } catch (err) {
-    error.value = err.response?.data?.msg || '注册失败';
+    // 捕获HTTP错误（如400等）
+    const errData = err.response?.data || {};
+
+    if (errData.msg === "请求参数验证失败" && errData.data) {
+      const errorField = Object.keys(errData.data)[0];
+      error.value = errData.data[errorField];
+    } else {
+      error.value = errData.msg || '注册失败';
+    }
   } finally {
     loading.value = false;
   }
@@ -701,7 +744,7 @@ input[type="password"]::-webkit-input-decoration-container {
   .decoration-panel {
     display: none;
   }
-  
+
   .form-panel {
     flex: 1;
   }
@@ -711,7 +754,7 @@ input[type="password"]::-webkit-input-decoration-container {
   .form-panel {
     padding: 20px;
   }
-  
+
   .form-header h2 {
     font-size: 1.75rem;
   }
@@ -721,11 +764,11 @@ input[type="password"]::-webkit-input-decoration-container {
   .form-container {
     max-width: 100%;
   }
-  
+
   .verification-group .form-input {
     padding-right: 100px;
   }
-  
+
   .code-button {
     font-size: 0.8rem;
     padding: 6px 12px;
