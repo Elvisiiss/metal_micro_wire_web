@@ -208,7 +208,7 @@ const monthlyData = ref([])
 const scenarioData = ref([])
 const latestDetections = ref([])
 const onlineDevicesCount = ref(0)
-const realtimeDetectionCount = ref(0)
+const realtimeDetectionCount = ref(45)
 const realtimeDetectionIncrement = ref(0)
 
 // 时间相关
@@ -350,7 +350,7 @@ const fetchData = async () => {
       onlineDevicesCount.value = devicesRes.data.data.totalElements || 0
     }
 
-    ElMessage.success('数据刷新成功')
+    // ElMessage.success('数据刷新成功')
 
     // 更新图表
     updateMonthlyPassRateChart()
