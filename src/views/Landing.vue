@@ -38,12 +38,11 @@
               金属微细线材综合检测平台，提供线径、拉伸强度、电导率等全方位检测，云端数据管理，让您对产品质量了如指掌。
             </p>
             <div class="flex space-x-4">
-              <button class="btn-gradient text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition">
-                立即体验
-              </button>
-              <button class="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium border border-blue-100 hover:bg-blue-50 transition">
-                观看演示
-              </button>
+              <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <a class="btn-gradient text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition no-underline">
+                  <router-link :to="whereTo" class="...">马上开始</router-link>
+                </a>
+              </div>
             </div>
           </div>
           <div class="md:w-1/2 flex justify-center">
@@ -150,9 +149,6 @@
             <div class="p-6">
               <h3 class="text-xl font-semibold mb-2">{{ template.name }}</h3>
               <p class="text-gray-600 mb-4">{{ template.description }}</p>
-              <button class="text-blue-500 font-medium flex items-center">
-                查看详情 <i class="fas fa-arrow-right ml-2"></i>
-              </button>
             </div>
           </div>
         </div>
@@ -189,64 +185,14 @@
       </div>
     </section>
 
-    <!-- 价格方案 -->
-    <section id="pricing" class="bg-gray-50 py-20">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">灵活价格方案</h2>
-          <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-            根据您的需求选择合适的方案，从小型实验室到大型生产企业都能满足
-          </p>
-        </div>
-
-        <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <div v-for="plan in pricingPlans" :key="plan.name"
-               class="bg-white rounded-xl shadow-sm overflow-hidden card-hover"
-               :class="{'border-2 border-blue-500 transform scale-105': plan.featured}">
-            <div v-if="plan.featured" class="bg-blue-500 text-white text-center py-2 text-sm font-medium">
-              最受欢迎
-            </div>
-            <div class="p-8">
-              <h3 class="text-xl font-semibold mb-2">{{ plan.name }}</h3>
-              <p class="text-gray-600 mb-6">{{ plan.description }}</p>
-
-              <div class="mb-6">
-                <span class="text-4xl font-bold text-gray-800">¥{{ plan.price }}</span>
-                <span class="text-gray-500">/{{ plan.period }}</span>
-              </div>
-
-              <ul class="space-y-3 mb-8">
-                <li v-for="item in plan.features" :key="item" class="flex items-center">
-                  <i class="fas fa-check text-green-500 mr-2"></i>
-                  <span>{{ item }}</span>
-                </li>
-              </ul>
-
-              <button
-                  class="w-full py-3 rounded-lg font-medium border transition"
-                  :class="plan.featured ? 'btn-gradient text-white hover:opacity-90' : 'border-blue-500 text-blue-500 hover:bg-blue-50'">
-                立即购买
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- CTA区域 -->
     <section class="gradient-bg py-20">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl font-bold text-gray-800 mb-6">准备好提升您的线材检测效率了吗？</h2>
-        <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-          现在注册即可获得7天免费试用，体验金属微细线材综合检测平台的全部功能
-        </p>
         <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
           <a class="btn-gradient text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition no-underline">
-            <router-link :to="whereTo" class="...">免费试用</router-link>
+            <router-link :to="whereTo" class="...">立即使用</router-link>
           </a>
-          <button class="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium border border-blue-100 hover:bg-blue-50 transition">
-            联系我们
-          </button>
         </div>
       </div>
     </section>
@@ -288,21 +234,15 @@
           <div>
             <h3 class="text-lg font-semibold mb-4">联系我们</h3>
             <ul class="space-y-2">
-              <li class="flex items-center text-gray-400"><i class="fas fa-envelope mr-2"></i> contact@weisi.com</li>
-              <li class="flex items-center text-gray-400"><i class="fas fa-phone mr-2"></i> 400-888-8888</li>
-              <li class="flex items-center text-gray-400"><i class="fas fa-map-marker-alt mr-2"></i> 上海市浦东新区张江高科技园区</li>
+              <li class="flex items-center text-gray-400"><i class="fas fa-envelope mr-2"></i> 3115089759@qq.com</li>
+              <li class="flex items-center text-gray-400"><i class="fas fa-phone mr-2"></i> 182-7036-5579</li>
+              <li class="flex items-center text-gray-400"><i class="fas fa-map-marker-alt mr-2"></i> 江西省赣州市 赣南科技学院</li>
             </ul>
           </div>
         </div>
 
         <div class="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p class="text-gray-400 mb-4 md:mb-0">© 2023 微丝检测平台. 保留所有权利.</p>
-          <div class="flex space-x-6">
-            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-weixin text-xl"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-weibo text-xl"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-linkedin text-xl"></i></a>
-            <a href="#" class="text-gray-400 hover:text-white transition"><i class="fab fa-github text-xl"></i></a>
-          </div>
+          <p class="text-gray-400 mb-4 md:mb-0">© 2025 微丝检测平台. 保留所有权利.</p>
         </div>
       </div>
     </footer>
@@ -329,7 +269,7 @@ const features = ref([
   {
     icon: 'fas fa-ruler',
     title: '线径测量',
-    description: '高精度激光测量技术，可检测0.01mm级别的线径变化，确保尺寸精确度'
+    description: '高精度激光测量技术，可检测0.01cm级别的线径变化，确保尺寸精确度'
   },
   {
     icon: 'fas fa-weight-hanging',
