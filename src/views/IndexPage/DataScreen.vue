@@ -55,12 +55,12 @@
       </el-card>
 
       <el-card shadow="hover" class="kpi-card">
-        <div class="card-title">设备总数</div>
-        <div class="card-value">{{ overviewData.totalDeviceCount || 0 }}</div>
+        <div class="card-title">溯源总质量问题</div>
+        <div class="card-value">{{ TotalQuestion || 0 }}</div>
         <div class="card-trend">
           <!-- 添加离线统计 -->
           <span class="trend-neutral">
-            在线: {{ onlineDevicesCount || 0 }}
+            严重问题数量: {{ BadQuestion || 0 }}
           </span>
         </div>
       </el-card>
@@ -202,6 +202,10 @@ import { useAuthStore } from '@/stores/auth'
 import { Refresh } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import OverViewAPI from '@/api/OverView.js'
+import ProblemTracingAPI from '@/api/ProblemTracing.js'
+const ProblemTracingAPIres = ref({})
+const TotalQuestion = ref(0)
+const BadQuestion = ref(0)
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -382,6 +386,7 @@ const fetchData = async () => {
     console.log(today_count)
 
 
+    getQuestions()
     // ElMessage.success('数据刷新成功')
 
     // 更新图表
@@ -442,6 +447,25 @@ const formatResult = (result) => {
     PENDING_REVIEW: '待审核'
   }
   return names[result] || result
+}
+
+const getQuestions = async () => {
+// 调用API获取数据
+  ProblemTracingAPIres.value = await ProblemTracingAPI.analyzeAllQualityIssues();
+
+// 从API响应中提取data数组
+  const issuesData = ProblemTracingAPIres.value.data;
+
+// 计算总质量问题数量（data数组长度）
+  TotalQuestion.value = issuesData.length;
+
+// 计算严重问题数量（筛选CRITICAL级别的条目）
+  BadQuestion.value = issuesData.filter(issue =>
+      issue.severity === "CRITICAL"
+  ).length;
+
+  console.log("总质量问题数量:", TotalQuestion.value);
+  console.log("严重问题数量:", BadQuestion.value);
 }
 
 // 生命周期钩子
