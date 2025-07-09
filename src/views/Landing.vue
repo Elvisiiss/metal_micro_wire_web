@@ -15,7 +15,6 @@
             <a href="#applications" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">应用场景</a>
             <a href="#templates" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">检测模板</a>
             <a href="#testimonials" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">用户评价</a>
-            <a href="#pricing" class="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium">价格方案</a>
           </div>
           <div class="flex items-center">
             <a class="btn-gradient text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition no-underline">
@@ -217,7 +216,6 @@
               <li><a href="#" class="text-gray-400 hover:text-white transition">功能特点</a></li>
               <li><a href="#" class="text-gray-400 hover:text-white transition">应用场景</a></li>
               <li><a href="#" class="text-gray-400 hover:text-white transition">检测模板</a></li>
-              <li><a href="#" class="text-gray-400 hover:text-white transition">价格方案</a></li>
             </ul>
           </div>
 

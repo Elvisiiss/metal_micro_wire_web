@@ -27,17 +27,13 @@ const router = createRouter({
             props: (route) => ({ info: route.query.info })
         },
         {
-            path: '/notFound',
-            component: import('../views/404.vue')
-        },
-        {
             path: '/data-screen',
             name: 'DataScreen',
             component: () => import('@/views/IndexPage/DataScreen.vue') // 新建独立组件
         },
         {
             path: '/:pathMatch(.*)',
-            redirect: '/notFound'
+            redirect: '/'
         },
         {
             path: '/login',

@@ -53,5 +53,16 @@ export default {
             console.error('获取系统总体统计数据失败', error.response?.data);
             throw new Error('获取系统总体统计数据失败');
         }
-    }
+    },
+
+    // 获取今日线材检测数据统计
+    async getTodayCount() {
+        try {
+            const response = await overviewApi.get('/today_count');
+            return response.data;
+        } catch (error) {
+            console.error('获取今日线材检测数据统计失败', error.response?.data);
+            throw new Error('获取今日线材检测数据统计失败');
+        }
+    },
 };

@@ -58,7 +58,10 @@
         <div class="card-title">设备总数</div>
         <div class="card-value">{{ overviewData.totalDeviceCount || 0 }}</div>
         <div class="card-trend">
-          <span class="trend-neutral">在线: {{ onlineDevicesCount || 0 }}</span>
+          <!-- 添加离线统计 -->
+          <span class="trend-neutral">
+            在线: {{ onlineDevicesCount || 0 }}
+          </span>
         </div>
       </el-card>
 
@@ -83,11 +86,11 @@
       </el-card>
 
       <el-card shadow="hover" class="kpi-card">
-        <div class="card-title">实时检测</div>
-        <div class="card-value">{{ realtimeDetectionCount }}</div>
+        <div class="card-title">今日检测数量</div>
+        <div class="card-value">{{ todayCount }}</div>
         <div class="card-trend">
-          <span class="trend-up">↑ {{ realtimeDetectionIncrement }}</span>
-          <span>近5分钟</span>
+          <span class="trend-up">↑ {{ todayIncrement }}</span>
+          <span>较上次刷新</span>
         </div>
       </el-card>
     </div>
@@ -198,6 +201,7 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { Refresh } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
+import OverViewAPI from '@/api/OverView.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -208,14 +212,16 @@ const monthlyData = ref([])
 const scenarioData = ref([])
 const latestDetections = ref([])
 const onlineDevicesCount = ref(0)
-const realtimeDetectionCount = ref(45)
-const realtimeDetectionIncrement = ref(0)
+const todayCount = ref(0);        // 今日检测总数
+const todayIncrement = ref(0);    // 较上次刷新的增量
+const lastTodayCount = ref(0);    // 用于记录上次刷新时的值
 
 // 时间相关
 const currentDate = ref('')
 const currentTime = ref('')
 const autoRefresh = ref(true)
 const countdown = ref(30)
+const today_count = ref(0)
 let refreshTimer = null
 let timeUpdateTimer = null
 let scrollInterval = null
@@ -279,11 +285,11 @@ const updateDateTime = () => {
 }
 
 // 实时检测数据独立更新
-const updateRealtimeData = () => {
+const updateRealtimeData = async () => {
+  const nowCount = (await OverViewAPI.getTodayCount()).data
   // 模拟实时检测数据
-  const increment = Math.floor(Math.random() * 12) + 3
-  realtimeDetectionIncrement.value = increment
-  realtimeDetectionCount.value += increment
+  realtimeDetectionIncrement.value = nowCount
+  realtimeDetectionCount.value = nowCount
 }
 
 // 从批次号获取线材类型中文名
@@ -308,6 +314,18 @@ const formatDateTime = (datetime) => {
 
 const fetchData = async () => {
   try {
+    // 获取今日检测数量
+    const todayRes = await OverViewAPI.getTodayCount();
+    const currentTodayCount = todayRes.data;
+
+    // 计算增量（当前值 - 上一次记录的值）
+    todayIncrement.value = currentTodayCount - lastTodayCount.value;
+
+    // 更新今日检测数量
+    todayCount.value = currentTodayCount;
+
+    // 保存当前值用于下次计算增量
+    lastTodayCount.value = currentTodayCount;
     // 获取系统总体统计数据
     const overviewRes = await axios.get('/api/OverView/count', {
       headers: { Authorization: `Bearer ${authStore.user.token}` }
@@ -347,8 +365,22 @@ const fetchData = async () => {
       headers: { Authorization: `Bearer ${authStore.user.token}` }
     })
     if (devicesRes.data.code === 'success') {
-      onlineDevicesCount.value = devicesRes.data.data.totalElements || 0
+      const devices = devicesRes.data.data.devices || [];
+      // 正确获取设备总数（实际数组长度）
+      const totalDevices = devices.length;
+
+      // 统计在线设备数（状态为"ON"）
+      onlineDevicesCount.value = devices.filter(
+          device => device.status === 'ON'
+      ).length;
+
+      // 如果需要更新overview中的设备总数
+      overviewData.value.totalDeviceCount = totalDevices;
     }
+
+    today_count.value = (await OverViewAPI.getTodayCount()).data
+    console.log(today_count)
+
 
     // ElMessage.success('数据刷新成功')
 
@@ -413,7 +445,10 @@ const formatResult = (result) => {
 }
 
 // 生命周期钩子
-onMounted(() => {
+onMounted(async () => {
+  const initTodayRes = await OverViewAPI.getTodayCount();
+  todayCount.value = initTodayRes.data;
+  lastTodayCount.value = initTodayRes.data;
   updateDateTime()
   timeUpdateTimer = setInterval(updateDateTime, 1000)
 

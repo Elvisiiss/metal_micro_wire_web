@@ -532,7 +532,7 @@ const formatNumber = (value, type = 'default') => {
     case 'conductivity':
       return num.toFixed(2);
     case 'extensibility':
-      return num.toFixed(1);
+      return num.toFixed(2);
     default:
       return num.toString();
   }
