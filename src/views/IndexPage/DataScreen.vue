@@ -3,7 +3,7 @@
     <!-- 顶部标题栏 -->
     <div class="header">
       <div class="title-container" @click="goToIndex">
-        <h1 class="title">金属微丝线材质量监控大屏</h1>
+        <h1 class="title">微细线材质量监控大屏</h1>
         <div class="datetime">
           <div class="date">{{ currentDate }}</div>
           <div class="time">{{ currentTime }}</div>

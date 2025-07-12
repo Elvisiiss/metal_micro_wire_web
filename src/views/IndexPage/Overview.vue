@@ -4,7 +4,7 @@
     <div class="page-header-custom">
       <div class="header-content">
         <span class="page-title">系统仪表盘</span>
-        <span class="page-subtitle">金属微丝质量检测系统数据概览</span>
+        <span class="page-subtitle">微细线材质量检测系统数据概览</span>
       </div>
       <div class="header-stats">
         <el-tag>最后更新: {{ lastUpdated }}</el-tag>

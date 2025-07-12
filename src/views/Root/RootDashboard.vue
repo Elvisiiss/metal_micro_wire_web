@@ -5,7 +5,7 @@
       <div class="navbar-left">
         <div class="logo">
           <span class="logo-icon">⦿</span>
-          <span class="logo-text">金属微细线材检测平台 - ROOT界面</span>
+          <span class="logo-text">微细线材云智检平台 - ROOT界面</span>
         </div>
         <ul class="nav-menu">
           <li :class="{active: activeTab === 'RootIndexPage'}"><a @click="setActiveTab('RootIndexPage')">用户管理</a></li>

@@ -7,7 +7,7 @@
           <div class="flex items-center">
             <div class="flex-shrink-0 flex items-center">
               <i class="fas fa-ruler-combined text-2xl text-blue-500 mr-2"></i>
-              <span class="text-xl font-semibold text-gray-800">微丝检测</span>
+              <span class="text-xl font-semibold text-gray-800">微细线材云智检平台</span>
             </div>
           </div>
           <div class="hidden md:ml-6 md:flex md:items-center md:space-x-8">
@@ -31,10 +31,10 @@
         <div class="md:flex items-center">
           <div class="md:w-1/2 mb-10 md:mb-0">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-800 leading-tight mb-6">
-              精准测量每一根<br>金属微细线材的品质
+              精准测量每一根<br>微细线材的品质
             </h1>
             <p class="text-lg text-gray-600 mb-8">
-              金属微细线材综合检测平台，提供线径、拉伸强度、电导率等全方位检测，云端数据管理，让您对产品质量了如指掌。
+              微细线材综合检测平台，提供线径、拉伸强度、电导率等全方位检测，云端数据管理，让您对产品质量了如指掌。
             </p>
             <div class="flex space-x-4">
               <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -46,7 +46,7 @@
           </div>
           <div class="md:w-1/2 flex justify-center">
             <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
-                 alt="金属线材检测"
+                 alt="微细线材云智检平台"
                  class="rounded-xl shadow-xl w-full max-w-md border-4 border-white">
           </div>
         </div>
@@ -203,7 +203,7 @@
           <div>
             <div class="flex items-center mb-4">
               <i class="fas fa-ruler-combined text-2xl text-blue-400 mr-2"></i>
-              <span class="text-xl font-semibold">微丝检测</span>
+              <span class="text-xl font-semibold">微细线材云智检平台</span>
             </div>
             <p class="text-gray-400">
               专业的金属微细线材综合检测平台，为您的产品质量保驾护航。
@@ -240,7 +240,7 @@
         </div>
 
         <div class="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p class="text-gray-400 mb-4 md:mb-0">© 2025 微丝检测平台. 保留所有权利.</p>
+          <p class="text-gray-400 mb-4 md:mb-0">© 2025 微细线材云智检平台. 保留所有权利.</p>
         </div>
       </div>
     </footer>

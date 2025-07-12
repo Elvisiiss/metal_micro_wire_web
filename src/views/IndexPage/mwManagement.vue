@@ -4,7 +4,7 @@
     <div class="page-header-custom">
       <div class="header-content">
         <span class="page-title">线材管理</span>
-        <span class="page-subtitle">管理金属微丝检测数据</span>
+        <span class="page-subtitle">管理微细线材检测数据</span>
       </div>
       <div class="header-stats">
         <el-tag>当前页: {{ wireMaterials.length }} 条记录</el-tag>

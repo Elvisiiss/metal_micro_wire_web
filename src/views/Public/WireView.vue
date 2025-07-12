@@ -2,7 +2,7 @@
   <div class="wire-container">
     <!-- 顶部标题和批次号 -->
     <div class="header" @click="goHome">
-      <h1>金属微丝检测报告</h1>
+      <h1>微细线材检测报告</h1>
       <div class="batch-number">
         <el-tag type="info" size="large">批次号: {{ batchNumber }}</el-tag>
       </div>
