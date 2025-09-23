@@ -3,7 +3,7 @@ import {createRouter, createWebHistory} from 'vue-router'
 import LoginView from '../views/Auth/Login.vue';
 import RegisterView from '../views/Auth/Register.vue';
 import ForgotPasswordView from '../views/Auth/ResetPassword.vue';
-import Landing from '../views/Landing.vue';
+import Landing from '../views/LandingPE.vue';
 import {useAuthStore} from "@/stores/auth.js";
 
 const router = createRouter({

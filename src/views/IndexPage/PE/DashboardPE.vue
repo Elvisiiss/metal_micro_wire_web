@@ -1,159 +1,138 @@
 <template>
-  <div class="dashboard-pe-container">
-    <!-- 移动端顶部导航栏 -->
-    <header class="pe-top-navbar">
-      <div class="navbar-header">
-        <button class="menu-toggle" @click="toggleSidebar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 12h18M3 6h18M3 18h18"/>
-          </svg>
-        </button>
-        <div class="logo">
-          <span class="logo-icon">⦿</span>
-          <span class="logo-text">云智检平台</span>
-        </div>
-        <div class="user-avatar-mini" @click="toggleUserMenu">
-          <img v-if="userAvatar" :src="userAvatar" alt="用户头像">
-          <div v-else class="avatar-placeholder">{{ userNameInitial }}</div>
-        </div>
+  <div class="mobile-dashboard-container">
+    <!-- 顶部导航栏（简化版） -->
+    <header class="mobile-top-bar">
+      <div class="logo-section">
+        <span class="logo-icon">⦿</span>
+        <span class="logo-text">微细线材云智检</span>
       </div>
-
-      <!-- 移动端导航菜单 -->
-      <div v-show="showSidebar" class="pe-sidebar-overlay" @click="toggleSidebar"></div>
-      <div v-show="showSidebar" class="pe-sidebar">
-        <div class="sidebar-header">
-          <div class="user-info-sidebar">
-            <div class="user-avatar-sidebar">
-              <img v-if="userAvatar" :src="userAvatar" alt="用户头像">
-              <div v-else class="avatar-placeholder">{{ userNameInitial }}</div>
-            </div>
-            <div class="user-details">
-              <span class="user-name">{{ user_name }}</span>
-              <span class="user-role">{{ authStore.user?.role_id === 1 ? '管理员' : '普通用户' }}</span>
-            </div>
-          </div>
-          <button class="close-sidebar" @click="toggleSidebar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-
-        <nav class="sidebar-nav">
-          <div
-              v-for="tab in mobileTabs"
-              :key="tab.key"
-              :class="['nav-item', { active: activeTab === tab.key }]"
-              @click="setActiveTab(tab.key)"
-          >
-            <div class="nav-icon">
-              <component :is="tab.icon" />
-            </div>
-            <span class="nav-text">{{ tab.name }}</span>
-          </div>
-        </nav>
-
-        <div class="sidebar-footer">
-          <button class="data-screen-btn" @click="goToDataScreenPE">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
-              <path d="M3 9h18M9 21V9"/>
-            </svg>
-            <span>数据大屏</span>
-          </button>
-
-          <div class="sidebar-actions">
-            <button class="action-btn" @click="openUserSettings">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-              <span>账号信息</span>
-            </button>
-            <button class="action-btn" @click="logout">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-              <span>退出登录</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 用户菜单 -->
-      <div v-show="showUserMenu" class="pe-user-menu">
-        <div class="menu-item" @click="openUserSettings">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-          <span>账号信息</span>
-        </div>
-        <div class="menu-item" @click="logout">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          <span>退出登录</span>
-        </div>
+      <div class="user-avatar" @click="toggleUserMenu">
+        <img v-if="userAvatar" :src="userAvatar" alt="用户头像">
+        <div v-else class="avatar-placeholder">{{ userNameInitial }}</div>
       </div>
     </header>
 
+    <!-- 用户菜单 -->
+    <div v-if="showUserMenu" class="user-menu-overlay" @click="showUserMenu = false">
+      <div class="user-menu" @click.stop>
+        <div class="user-info">
+          <div class="user-avatar-large">
+            <img v-if="userAvatar" :src="userAvatar" alt="用户头像">
+            <div v-else class="avatar-placeholder">{{ userNameInitial }}</div>
+          </div>
+          <div class="user-details">
+            <span class="user-name">{{ user_name }}</span>
+            <span class="user-role">{{ authStore.user?.role_id === 1 ? '管理员' : '普通用户' }}</span>
+          </div>
+        </div>
+        <div class="menu-items">
+          <div class="menu-item" @click="openUserSettings">
+            <i class="icon-user"></i>
+            <span>账号信息</span>
+          </div>
+          <div class="menu-item" @click="setActiveTab('SystemConfig')">
+            <i class="icon-settings"></i>
+            <span>系统设置</span>
+          </div>
+          <div class="menu-item" @click="goToDataScreen">
+            <i class="icon-data"></i>
+            <span>数据大屏</span>
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-item logout" @click="logout">
+            <i class="icon-logout"></i>
+            <span>退出登录</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 主内容区 -->
-    <main class="pe-main-content">
-      <!-- 顶部标签切换 -->
-      <div class="pe-tab-bar">
-        <div class="tab-scroll-container">
-          <div
-              v-for="tab in visibleTabs"
-              :key="tab.key"
-              :class="['pe-tab', { active: activeTab === tab.key }]"
-              @click="setActiveTab(tab.key)"
-          >
-            {{ tab.name }}
+    <main class="mobile-content">
+      <!-- 仪表盘视图 -->
+      <Overview v-if="activeTab === 'dashboard'"/>
+
+      <!-- 设备管理 -->
+      <EquipmentManageDashboard v-if="activeTab === 'equipmentManage'"/>
+
+      <!-- 检测管理 -->
+      <mwManagement v-if="activeTab === 'mwManagement'"/>
+
+      <!-- 更多功能视图 -->
+      <div v-if="activeTab === 'more'" class="more-view">
+        <div class="more-grid">
+          <div class="more-item" @click="setActiveTab('ApplicationScenario')">
+            <i class="icon-scene"></i>
+            <span>应用场景</span>
+          </div>
+          <div class="more-item" @click="setActiveTab('QualityEvaluation')">
+            <i class="icon-quality"></i>
+            <span>质量评估</span>
+          </div>
+          <div class="more-item" @click="setActiveTab('ProblemTracing')">
+            <i class="icon-trace"></i>
+            <span>问题回溯</span>
+          </div>
+          <div class="more-item" @click="setActiveTab('chat')">
+            <i class="icon-chat"></i>
+            <span>智能决策</span>
           </div>
         </div>
       </div>
 
-      <!-- 内容区域 -->
-      <div class="pe-content-area">
-        <!-- 仪表盘视图 -->
-        <Overview v-if="activeTab === 'dashboard'" class="pe-component"/>
-
-        <!-- 智能聊天视图 -->
-        <ChatView v-if="activeTab === 'chat'" class="pe-component"/>
-
-        <!-- 设备管理 -->
-        <EquipmentManageDashboard v-if="activeTab === 'equipmentManage'" class="pe-component"/>
-
-        <!-- 应用场景管理 -->
-        <ApplicationScenario v-if="activeTab === 'ApplicationScenario'" class="pe-component"/>
-
-        <!-- 线材管理 -->
-        <mwManagement v-if="activeTab === 'mwManagement'" class="pe-component"/>
-
-        <!-- 质量评估 -->
-        <QualityEvaluation v-if="activeTab === 'QualityEvaluation'" class="pe-component"/>
-
-        <!-- 问题回溯 -->
-        <ProblemTracing v-if="activeTab === 'ProblemTracing'" class="pe-component"/>
-      </div>
+      <!-- 其他视图 -->
+      <ApplicationScenario v-if="activeTab === 'ApplicationScenario'"/>
+      <QualityEvaluation v-if="activeTab === 'QualityEvaluation'"/>
+      <ProblemTracing v-if="activeTab === 'ProblemTracing'"/>
+      <ChatView v-if="activeTab === 'chat'"/>
+      <SystemConfig v-if="activeTab === 'SystemConfig'"/>
     </main>
 
+    <!-- 底部标签栏 -->
+    <nav class="bottom-tab-bar">
+      <div
+          class="tab-item"
+          :class="{ active: activeTab === 'dashboard' }"
+          @click="setActiveTab('dashboard')"
+      >
+        <i class="tab-icon">📊</i>
+        <span class="tab-label">仪表盘</span>
+      </div>
+      <div
+          class="tab-item"
+          :class="{ active: activeTab === 'equipmentManage' }"
+          @click="setActiveTab('equipmentManage')"
+      >
+        <i class="tab-icon">⚙️</i>
+        <span class="tab-label">设备</span>
+      </div>
+      <div
+          class="tab-item"
+          :class="{ active: activeTab === 'mwManagement' }"
+          @click="setActiveTab('mwManagement')"
+      >
+        <i class="tab-icon">🔍</i>
+        <span class="tab-label">检测</span>
+      </div>
+      <div
+          class="tab-item"
+          :class="{ active: activeTab === 'more' }"
+          @click="setActiveTab('more')"
+      >
+        <i class="tab-icon">⋮</i>
+        <span class="tab-label">更多</span>
+      </div>
+    </nav>
+
     <!-- 账号信息悬浮窗 -->
-    <transition name="slide-fade">
+    <transition name="slide-up">
       <div v-if="showUserSettings" class="user-settings-modal">
         <div class="modal-overlay" @click="closeUserSettings"></div>
         <div class="modal-content">
           <div class="modal-header">
             <h3>账号信息</h3>
             <button class="close-btn" @click="closeUserSettings">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 6L6 18M6 6l12 12"/>
-              </svg>
+              <i class="icon-close">×</i>
             </button>
           </div>
           <div class="modal-body">
@@ -166,58 +145,38 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth.js';
+import { onMounted, ref, onBeforeUnmount, computed } from 'vue';
+import Overview from './OverviewPE.vue';
+import ChatView from './ChatViewPE.vue';
+import UserSettings from '../../Public/UserSettingsPE.vue';
+import EquipmentManageDashboard from "./EquipmentManageDashboardPE.vue";
+import ApplicationScenario from './ApplicationScenarioPE.vue';
+import QualityEvaluation from './QualityEvaluationPE.vue';
+import mwManagement from './mwManagementPE.vue';
+import SystemConfig from "./SystemConfigPE.vue";
+import ProblemTracing from "./ProblemTracingPE.vue";
 import AuthAPI from '@/api/auth.js';
-import { ElMessage } from "element-plus";
 
-// 组件导入
-import Overview from './Overview.vue';
-import ChatView from './ChatView.vue';
-import UserSettings from '../../Public/UserSettings.vue';
-import EquipmentManageDashboard from "@/views/IndexPage/PC/EquipmentManageDashboard.vue";
-import ApplicationScenario from './ApplicationScenario.vue';
-import QualityEvaluation from './QualityEvaluation.vue';
-import mwManagement from './mwManagement.vue';
-import ProblemTracing from "@/views/IndexPage/PC/ProblemTracing.vue";
+import {useRouter} from 'vue-router';
+import {useAuthStore} from '@/stores/auth.js';
+import {ElMessage} from "element-plus";
 
 const router = useRouter();
 const authStore = useAuthStore();
-
-// 响应式数据
-const showSidebar = ref(false);
 const showUserMenu = ref(false);
 const showUserSettings = ref(false);
-const activeTab = ref('dashboard');
 const user_name = authStore.user?.user_name;
 
-// 移动端标签配置
-const mobileTabs = [
-  { key: 'dashboard', name: '仪表盘', icon: 'DashboardIcon' },
-  { key: 'equipmentManage', name: '设备管理', icon: 'EquipmentIcon' },
-  { key: 'ApplicationScenario', name: '应用场景', icon: 'ScenarioIcon' },
-  { key: 'mwManagement', name: '检测管理', icon: 'ManagementIcon' },
-  { key: 'QualityEvaluation', name: '质量评估', icon: 'QualityIcon' },
-  { key: 'ProblemTracing', name: '问题回溯', icon: 'TracingIcon' },
-  { key: 'chat', name: '智能决策', icon: 'ChatIcon' }
-];
-
-// 可见标签（水平滚动）
-const visibleTabs = computed(() => {
-  return mobileTabs.filter(tab => tab.key !== 'SystemConfig');
-});
-
-// 计算属性
 const userNameInitial = computed(() => {
   return authStore.user?.user_name?.charAt(0)?.toUpperCase() || '';
 });
 
 const userAvatar = computed(() => authStore.user?.avatar_url || '');
 
-// 方法
-const toggleSidebar = () => {
-  showSidebar.value = !showSidebar.value;
+const activeTab = ref('dashboard');
+
+const setActiveTab = (tab) => {
+  activeTab.value = tab;
   showUserMenu.value = false;
 };
 
@@ -225,57 +184,33 @@ const toggleUserMenu = () => {
   showUserMenu.value = !showUserMenu.value;
 };
 
-const setActiveTab = (tab) => {
-  activeTab.value = tab;
-  showSidebar.value = false;
-  showUserMenu.value = false;
-};
-
-const goToDataScreenPE = () => {
-  router.push('/data-screen-pe');
-  showSidebar.value = false;
-};
-
 const openUserSettings = () => {
-  showUserSettings.value = true;
-  showSidebar.value = false;
   showUserMenu.value = false;
+  showUserSettings.value = true;
 };
 
 const closeUserSettings = () => {
   showUserSettings.value = false;
 };
 
+const goToDataScreen = () => {
+  router.push('/data-screen-pe');
+  showUserMenu.value = false;
+};
+
 const logout = () => {
+  showUserMenu.value = false;
   AuthAPI.UserLogout(authStore.user?.token);
   authStore.clearUser();
   router.push('/login');
 };
 
-// 点击外部关闭菜单
-const handleClickOutside = (event) => {
-  if (!showSidebar.value && !showUserMenu.value) return;
-
-  const isClickInsideSidebar = event.target.closest('.pe-sidebar');
-  const isClickInsideUserMenu = event.target.closest('.pe-user-menu');
-  const isClickInsideUserAvatar = event.target.closest('.user-avatar-mini');
-
-  if (!isClickInsideSidebar && showSidebar.value) {
-    showSidebar.value = false;
-  }
-
-  if (!isClickInsideUserMenu && !isClickInsideUserAvatar && showUserMenu.value) {
-    showUserMenu.value = false;
-  }
-};
-
-// 生命周期
 onMounted(async () => {
   const r = ref();
   try {
     r.value = (await AuthAPI.DetermineToken(authStore.user?.token)).data;
-  } catch (error) {}
-
+  } catch (error) {
+  }
   if (r.value !== 0 && r.value !== 1) {
     if (r.value === 999) {
       await router.push('/root');
@@ -284,65 +219,34 @@ onMounted(async () => {
       logout();
     }
   }
-
-  document.addEventListener('click', handleClickOutside);
 });
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside);
-});
-
-// 图标组件（简化版）
-const DashboardIcon = { template: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' };
-const EquipmentIcon = { template: '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6" y2="6"/><line x1="6" y1="18" x2="6" y2="18"/></svg>' };
-const ScenarioIcon = { template: '<svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/><polyline points="2 15.5 12 8.5 22 15.5"/><line x1="12" y1="2" x2="12" y2="8.5"/></svg>' };
-const ManagementIcon = { template: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>' };
-const QualityIcon = { template: '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' };
-const TracingIcon = { template: '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' };
-const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' };
 </script>
 
 <style scoped>
-.dashboard-pe-container {
+.mobile-dashboard-container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f5f7fa;
   min-height: 100vh;
   color: #333;
   display: flex;
   flex-direction: column;
+  padding-bottom: 60px; /* 为底部标签栏留出空间 */
 }
 
-/* 移动端顶部导航栏 */
-.pe-top-navbar {
+/* 顶部导航栏 */
+.mobile-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: #fff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 100;
 }
 
-.navbar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  height: 60px;
-}
-
-.menu-toggle {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  color: #1a73e8;
-}
-
-.menu-toggle svg {
-  width: 24px;
-  height: 24px;
-}
-
-.logo {
+.logo-section {
   display: flex;
   align-items: center;
 }
@@ -359,7 +263,7 @@ const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1
   color: #1a3a6e;
 }
 
-.user-avatar-mini {
+.user-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -367,13 +271,13 @@ const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1
   cursor: pointer;
 }
 
-.user-avatar-mini img {
+.user-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.avatar-placeholder {
+.user-avatar .avatar-placeholder {
   width: 100%;
   height: 100%;
   border-radius: 50%;
@@ -382,54 +286,74 @@ const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
 }
 
-/* 侧边栏 */
-.pe-sidebar-overlay {
+/* 用户菜单 */
+.user-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1999;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
 }
 
-.pe-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 280px;
-  height: 100%;
-  background: #fff;
-  z-index: 2000;
-  transform: translateX(0);
-  transition: transform 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.user-menu {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 16px 16px 0 0;
   padding: 20px;
-  border-bottom: 1px solid #eaeaea;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+  animation: slide-up 0.3s ease-out;
 }
 
-.user-info-sidebar {
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.user-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
 }
 
-.user-avatar-sidebar {
-  width: 48px;
-  height: 48px;
+.user-avatar-large {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   overflow: hidden;
+  margin-right: 15px;
+}
+
+.user-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-avatar-large .avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409eff, #367bd6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
 }
 
 .user-details {
@@ -438,192 +362,141 @@ const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1
 }
 
 .user-name {
+  font-size: 18px;
   font-weight: 600;
-  font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .user-role {
-  font-size: 12px;
-  color: #666;
-}
-
-.close-sidebar {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  color: #666;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 20px 0;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  padding: 16px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.nav-item.active {
-  background-color: #f0f7ff;
-  border-right: 3px solid #1a73e8;
-}
-
-.nav-item:hover {
-  background-color: #f5f5f5;
-}
-
-.nav-icon {
-  width: 24px;
-  height: 24px;
-  margin-right: 12px;
-  color: #666;
-}
-
-.nav-item.active .nav-icon {
-  color: #1a73e8;
-}
-
-.nav-text {
   font-size: 14px;
-  font-weight: 500;
+  color: #666;
 }
 
-.sidebar-footer {
-  padding: 20px;
-  border-top: 1px solid #eaeaea;
-}
-
-.data-screen-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  background: #1a73e8;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 16px;
-}
-
-.data-screen-btn svg {
-  width: 18px;
-  height: 18px;
-}
-
-.sidebar-actions {
+.menu-items {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background: none;
-  border: 1px solid #eaeaea;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.action-btn svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* 用户菜单 */
-.pe-user-menu {
-  position: absolute;
-  top: 100%;
-  right: 16px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 2001;
-  min-width: 150px;
-  overflow: hidden;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
+  padding: 15px 0;
+  font-size: 16px;
   cursor: pointer;
-  transition: background-color 0.3s;
-  font-size: 14px;
+  transition: color 0.2s;
 }
 
 .menu-item:hover {
-  background-color: #f5f5f5;
+  color: #1a73e8;
 }
 
-.menu-item svg {
-  width: 16px;
-  height: 16px;
+.menu-item i {
+  margin-right: 15px;
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #eee;
+  margin: 10px 0;
+}
+
+.menu-item.logout {
+  color: #f56c6c;
+}
+
+.menu-item.logout:hover {
+  color: #f78989;
 }
 
 /* 主内容区 */
-.pe-main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.pe-tab-bar {
-  background: #fff;
-  border-bottom: 1px solid #eaeaea;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.tab-scroll-container {
-  display: flex;
-  min-width: max-content;
-  padding: 0 16px;
-}
-
-.pe-tab {
-  padding: 12px 16px;
-  white-space: nowrap;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
-  border-bottom: 2px solid transparent;
-  transition: all 0.3s;
-}
-
-.pe-tab.active {
-  color: #1a73e8;
-  border-bottom-color: #1a73e8;
-}
-
-.pe-content-area {
+.mobile-content {
   flex: 1;
   padding: 16px;
   overflow-y: auto;
 }
 
-.pe-component {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  margin-bottom: 16px;
+/* 更多功能视图 */
+.more-view {
+  padding: 20px 0;
 }
 
-/* 模态框样式 */
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.more-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 12px;
+  padding: 20px 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.more-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.more-item i {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.more-item span {
+  font-size: 14px;
+  color: #333;
+}
+
+/* 底部标签栏 */
+.bottom-tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.tab-item.active {
+  color: #1a73e8;
+}
+
+.tab-icon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.tab-label {
+  font-size: 12px;
+}
+
+/* 账号信息悬浮窗 */
 .user-settings-modal {
   position: fixed;
   top: 0;
@@ -633,7 +506,7 @@ const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 3000;
+  z-index: 2000;
 }
 
 .modal-overlay {
@@ -655,6 +528,9 @@ const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  animation: bounceIn 0.5s;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -675,50 +551,369 @@ const ChatIcon = { template: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1
 .close-btn {
   background: none;
   border: none;
-  padding: 4px;
+  font-size: 24px;
   cursor: pointer;
   color: #6c757d;
+  transition: transform 0.2s, color 0.2s;
 }
 
-.close-btn svg {
-  width: 20px;
-  height: 20px;
+.close-btn:hover {
+  color: #333;
+  transform: rotate(90deg);
 }
 
 .modal-body {
   overflow-y: auto;
   padding: 20px;
-  max-height: 60vh;
 }
 
-/* 动画 */
-.slide-fade-enter-active {
-  transition: all 0.3s ease;
-}
-.slide-fade-leave-active {
-  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
-}
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateY(-10px);
-  opacity: 0;
-}
-
-/* 响应式调整 */
-@media (min-width: 768px) {
-  .dashboard-pe-container {
-    max-width: 768px;
-    margin: 0 auto;
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
-/* 隐藏滚动条但保持滚动功能 */
-.tab-scroll-container::-webkit-scrollbar {
-  display: none;
+/* 图标样式 */
+.icon-user::before {
+  content: "👤";
 }
 
-.tab-scroll-container {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.icon-settings::before {
+  content: "⚙️";
+}
+
+.icon-data::before {
+  content: "📈";
+}
+
+.icon-logout::before {
+  content: "🚪";
+}
+
+.icon-scene::before {
+  content: "🌐";
+}
+
+.icon-quality::before {
+  content: "⭐";
+}
+
+.icon-trace::before {
+  content: "🔍";
+}
+
+.icon-chat::before {
+  content: "💬";
+}
+
+/* 响应式调整 */
+/* 小屏幕手机 (小于480px) */
+@media (max-width: 479px) {
+  .mobile-content {
+    padding: 12px;
+  }
+
+  .more-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .more-item {
+    padding: 16px 8px;
+  }
+
+  .tab-icon {
+    font-size: 20px;
+  }
+
+  .tab-label {
+    font-size: 11px;
+  }
+}
+
+/* 中等屏幕手机 (480px - 767px) */
+@media (min-width: 480px) and (max-width: 767px) {
+  .mobile-content {
+    padding: 14px;
+  }
+
+  .more-grid {
+    gap: 14px;
+  }
+
+  .more-item {
+    padding: 18px 10px;
+  }
+}
+
+/* 平板和中等屏幕 (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mobile-dashboard-container {
+    max-width: 768px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding-bottom: 70px;
+  }
+
+  .mobile-top-bar {
+    padding: 16px 24px;
+  }
+
+  .logo-icon {
+    font-size: 24px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .user-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mobile-content {
+    padding: 20px;
+  }
+
+  .more-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .more-item {
+    padding: 24px 12px;
+  }
+
+  .more-item i {
+    font-size: 32px;
+  }
+
+  .more-item span {
+    font-size: 16px;
+  }
+
+  .bottom-tab-bar {
+    padding: 10px 0;
+  }
+
+  .tab-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+
+  .tab-label {
+    font-size: 13px;
+  }
+}
+
+/* 大屏幕平板和小型桌面 (1024px - 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .mobile-dashboard-container {
+    max-width: 1024px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding-bottom: 80px;
+  }
+
+  .mobile-top-bar {
+    padding: 18px 28px;
+  }
+
+  .logo-icon {
+    font-size: 26px;
+  }
+
+  .logo-text {
+    font-size: 20px;
+  }
+
+  .user-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .mobile-content {
+    padding: 24px;
+  }
+
+  .more-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+
+  .more-item {
+    padding: 28px 14px;
+  }
+
+  .more-item i {
+    font-size: 36px;
+  }
+
+  .more-item span {
+    font-size: 17px;
+  }
+
+  .bottom-tab-bar {
+    padding: 12px 0;
+  }
+
+  .tab-icon {
+    font-size: 26px;
+    margin-bottom: 6px;
+  }
+
+  .tab-label {
+    font-size: 14px;
+  }
+}
+
+/* 桌面屏幕 (1280px及以上) */
+@media (min-width: 1280px) {
+  .mobile-dashboard-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding-bottom: 80px;
+  }
+
+  .mobile-top-bar {
+    padding: 20px 32px;
+  }
+
+  .logo-icon {
+    font-size: 28px;
+  }
+
+  .logo-text {
+    font-size: 22px;
+  }
+
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .mobile-content {
+    padding: 28px;
+  }
+
+  .more-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+  }
+
+  .more-item {
+    padding: 32px 16px;
+  }
+
+  .more-item i {
+    font-size: 40px;
+  }
+
+  .more-item span {
+    font-size: 18px;
+  }
+
+  .bottom-tab-bar {
+    padding: 14px 0;
+  }
+
+  .tab-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  .tab-label {
+    font-size: 15px;
+  }
+
+  /* 在大屏幕上调整用户菜单为侧边弹出 */
+  .user-menu-overlay {
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .user-menu {
+    width: 320px;
+    height: 100%;
+    border-radius: 0;
+    animation: slide-left 0.3s ease-out;
+  }
+
+  @keyframes slide-left {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .mobile-dashboard-container {
+    padding-bottom: 50px;
+  }
+
+  .mobile-top-bar {
+    padding: 8px 16px;
+  }
+
+  .mobile-content {
+    padding: 12px;
+  }
+
+  .more-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .more-item {
+    padding: 12px 8px;
+  }
+
+  .bottom-tab-bar {
+    padding: 6px 0;
+  }
+}
+
+/* 高DPI屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .mobile-top-bar {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  }
+
+  .bottom-tab-bar {
+    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .mobile-top-bar,
+  .bottom-tab-bar,
+  .user-menu-overlay,
+  .user-settings-modal {
+    display: none !important;
+  }
+
+  .mobile-dashboard-container {
+    background-color: white;
+    padding-bottom: 0;
+  }
+
+  .mobile-content {
+    padding: 0;
+  }
 }
 </style>
