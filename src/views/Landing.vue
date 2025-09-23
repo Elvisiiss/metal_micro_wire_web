@@ -25,7 +25,7 @@
       </div>
     </nav>
 
-    <!-- 英雄区域 -->
+    <!-- 标题区域 -->
     <section class="gradient-bg">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
         <div class="md:flex items-center">
@@ -34,10 +34,10 @@
               精准测量每一根<br>微细线材的品质
             </h1>
             <p class="text-lg text-gray-600 mb-8">
-              微细线材综合检测平台，提供线径、拉伸强度、电导率等全方位检测，云端数据管理，让您对产品质量了如指掌。
+              微细线材云智检平台，提供线径、拉伸强度、电导率等全方位检测，云端数据管理，让您对数据了如指掌。
             </p>
             <div class="flex space-x-4">
-              <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-5">
                 <a class="btn-gradient text-white px-8 py-3 rounded-lg font-medium hover:opacity-90 transition no-underline">
                   <router-link :to="whereTo" class="...">马上开始</router-link>
                 </a>

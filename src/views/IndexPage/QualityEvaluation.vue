@@ -105,7 +105,7 @@
 
           <el-table-column label="操作" width="160">
             <template #default="{ row }">
-              <el-button size="small" @click="showConfirmDialog(row)">审核</el-button>
+              <el-button size="small" @click="showConfirmDialog(row)" v-if="isAdmin">审核</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -216,7 +216,7 @@
 
           <el-table-column label="操作" width="160">
             <template #default="{ row }">
-              <el-button size="small" @click="showConfirmDialog(row)">重新审核</el-button>
+              <el-button size="small" @click="showConfirmDialog(row)" v-if="isAdmin">重新审核</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -292,7 +292,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import {ref, onMounted, watch, computed} from 'vue'
 import {
   ElMessage,
   ElMessageBox
@@ -326,6 +326,7 @@ const completedLoading = ref(false)
 const completedScenario = ref('')
 const sortBy = ref('createTime')
 const sortDirection = ref('desc')
+const isAdmin = computed(() => authStore.user?.role_id === 1)
 
 // 人工审核对话框
 const confirmDialogVisible = ref(false)

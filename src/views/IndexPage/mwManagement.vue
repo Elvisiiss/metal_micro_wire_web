@@ -22,7 +22,9 @@
             @keyup.enter="fetchWireMaterials"
         >
           <template #prefix>
-            <el-icon><search /></el-icon>
+            <el-icon>
+              <search/>
+            </el-icon>
           </template>
         </el-input>
       </el-col>
@@ -48,7 +50,9 @@
       <el-collapse-item>
         <template #title>
           <div class="custom-collapse-title">
-            <el-icon><Filter /></el-icon>
+            <el-icon>
+              <Filter/>
+            </el-icon>
             <span>高级筛选</span>
           </div>
         </template>
@@ -110,13 +114,13 @@
                   placeholder="排序字段"
                   style="width: 100%"
               >
-                <el-option label="创建时间" value="createTime" />
-                <el-option label="检测时间" value="eventTime" />
-                <el-option label="批次号" value="batchNumber" />
-                <el-option label="直径" value="diameter" />
-                <el-option label="电导率" value="resistance" />
-                <el-option label="延展率" value="extensibility" />
-                <el-option label="重量" value="weight" />
+                <el-option label="创建时间" value="createTime"/>
+                <el-option label="检测时间" value="eventTime"/>
+                <el-option label="批次号" value="batchNumber"/>
+                <el-option label="直径" value="diameter"/>
+                <el-option label="电导率" value="resistance"/>
+                <el-option label="延展率" value="extensibility"/>
+                <el-option label="重量" value="weight"/>
               </el-select>
             </el-col>
             <el-col :span="6">
@@ -125,8 +129,8 @@
                   placeholder="排序方向"
                   style="width: 100%"
               >
-                <el-option label="升序" value="asc" />
-                <el-option label="降序" value="desc" />
+                <el-option label="升序" value="asc"/>
+                <el-option label="降序" value="desc"/>
               </el-select>
             </el-col>
           </el-row>
@@ -258,7 +262,7 @@
           v-if="editingWire"
       >
         <el-form-item label="批次号">
-          <el-input v-model="editingWire.batchNumber" disabled />
+          <el-input v-model="editingWire.batchNumber" disabled/>
         </el-form-item>
 
         <el-row :gutter="20">
@@ -312,23 +316,23 @@
         </el-row>
 
         <el-form-item label="生产商" prop="manufacturer">
-          <el-input v-model="editingWire.manufacturer" maxlength="100" />
+          <el-input v-model="editingWire.manufacturer" maxlength="100"/>
         </el-form-item>
 
         <el-form-item label="负责人" prop="responsiblePerson">
-          <el-input v-model="editingWire.responsiblePerson" maxlength="50" />
+          <el-input v-model="editingWire.responsiblePerson" maxlength="50"/>
         </el-form-item>
 
         <el-form-item label="工艺类型" prop="processType">
-          <el-input v-model="editingWire.processType" maxlength="50" />
+          <el-input v-model="editingWire.processType" maxlength="50"/>
         </el-form-item>
 
         <el-form-item label="生产机器" prop="productionMachine">
-          <el-input v-model="editingWire.productionMachine" maxlength="100" />
+          <el-input v-model="editingWire.productionMachine" maxlength="100"/>
         </el-form-item>
 
         <el-form-item label="联系邮箱" prop="contactEmail">
-          <el-input v-model="editingWire.contactEmail" maxlength="100" />
+          <el-input v-model="editingWire.contactEmail" maxlength="100"/>
         </el-form-item>
       </el-form>
 
@@ -357,10 +361,10 @@
           </div>
           <div v-if="record.type === '最终结果'" class="result-icon">
             <el-icon v-if="record.result === 'PASS'" color="#67C23A" :size="24">
-              <CircleCheckFilled />
+              <CircleCheckFilled/>
             </el-icon>
             <el-icon v-else-if="record.result === 'FAIL'" color="#F56C6C" :size="24">
-              <CircleCloseFilled />
+              <CircleCloseFilled/>
             </el-icon>
           </div>
         </div>
@@ -370,11 +374,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { Search, Filter, CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {CircleCheckFilled, CircleCloseFilled, Filter, Search} from '@element-plus/icons-vue';
+import {ElMessage, ElMessageBox} from 'element-plus';
 import mwAPI from '@/api/mwManagement.js';
-import { useAuthStore } from '@/stores/auth';
+import {useAuthStore} from '@/stores/auth';
 
 // 响应式数据
 const wireMaterials = ref([]);
@@ -412,10 +416,23 @@ const isManager = computed(() => {
   return authStore.user?.role_id === 1;
 });
 
+let refreshTimer = null;
+
 // 生命周期钩子
 onMounted(() => {
   fetchWireMaterials();
+
+  // 设置自动刷新
+  refreshTimer = setInterval(() => {
+    /////////////////
+    fetchWireMaterials()
+  }, 1000)
+
 });
+
+onBeforeUnmount(() => {
+  clearInterval(refreshTimer)
+})
 
 // 获取线材列表
 const fetchWireMaterials = async () => {
@@ -465,14 +482,14 @@ const resetSearch = () => {
 
 // 打开编辑对话框
 const openEditDialog = (wire) => {
-  editingWire.value = { ...wire };
+  editingWire.value = {...wire};
   editDialogVisible.value = true;
 };
 
 // 保存线材信息
 const saveWireMaterial = async () => {
   try {
-    const { batchNumber, ...updateData } = editingWire.value;
+    const {batchNumber, ...updateData} = editingWire.value;
     await mwAPI.updateWireMaterial(batchNumber, updateData);
     ElMessage.success('线材信息更新成功');
     editDialogVisible.value = false;
@@ -502,7 +519,8 @@ const handleDelete = (batchNumber) => {
       ElMessage.error('删除线材记录失败');
       console.error(error);
     }
-  }).catch(() => {});
+  }).catch(() => {
+  });
 };
 
 // 格式化日期时间
