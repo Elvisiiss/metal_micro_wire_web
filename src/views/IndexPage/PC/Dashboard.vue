@@ -107,28 +107,24 @@
 <script setup>
 import {
   DataBoard,
-  User,
-  QuestionFilled,
-  Setting,
-  SwitchButton
 } from '@element-plus/icons-vue'
 
 import {onMounted, ref, onBeforeUnmount, computed} from 'vue';
 import Overview from './Overview.vue';
 import DataScreen from './DataScreen.vue';
 import ChatView from './ChatView.vue';
-import UserSettings from '../Public/UserSettings.vue'; // 导入UserSettings组件
-import EquipmentManageDashboard from "@/views/IndexPage/EquipmentManageDashboard.vue";
+import UserSettings from '../../Public/UserSettings.vue'; // 导入UserSettings组件
+import EquipmentManageDashboard from "@/views/IndexPage/PC/EquipmentManageDashboard.vue";
 import ApplicationScenario from './ApplicationScenario.vue'
 import QualityEvaluation from './QualityEvaluation.vue'
 import mwManagement from './mwManagement.vue'
-import SystemConfig from "@/views/IndexPage/SystemConfig.vue";
+import SystemConfig from "@/views/IndexPage/PC/SystemConfig.vue";
 import AuthAPI from '@/api/auth.js'
 
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth.js';
 import {ElMessage} from "element-plus";
-import ProblemTracing from "@/views/IndexPage/ProblemTracing.vue";
+import ProblemTracing from "@/views/IndexPage/PC/ProblemTracing.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();

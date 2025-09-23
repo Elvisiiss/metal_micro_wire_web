@@ -29,7 +29,7 @@ const router = createRouter({
         {
             path: '/data-screen',
             name: 'DataScreen',
-            component: () => import('@/views/IndexPage/DataScreen.vue') // 新建独立组件
+            component: () => import('@/views/IndexPage/PC/DataScreen.vue') // 新建独立组件
         },
         {
             path: '/:pathMatch(.*)',
@@ -58,7 +58,19 @@ const router = createRouter({
         {
             path: '/index',
             name: 'indexPage',
-            component: import('../views/IndexPage/Dashboard.vue')
+            component: import('../views/IndexPage/PC/Dashboard.vue')
+        },
+        {
+            path: '/dashboard-pe',
+            name: 'DashboardPE',
+            component: () => import('@/views/IndexPage/PE/DashboardPE.vue'),
+            meta: { requiresAuth: true }
+        },
+        {
+            path: '/data-screen-pe',
+            name: 'DataScreenPE',
+            component: () => import('@/views/IndexPage/PE/DataScreenPE.vue'),
+            meta: { requiresAuth: true }
         },
         {
             path: '/user-settings',

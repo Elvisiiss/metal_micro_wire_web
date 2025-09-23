@@ -298,8 +298,8 @@ import {
   ElMessageBox
 } from 'element-plus'
 import { ArrowDown, CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue'
-import qualityAPI from '@/api/qualityEvaluation'
-import { useAuthStore } from '@/stores/auth';
+import qualityAPI from '@/api/qualityEvaluation.js'
+import { useAuthStore } from '@/stores/auth.js';
 
 // 引入权限存储
 const authStore = useAuthStore();

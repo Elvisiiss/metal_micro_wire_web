@@ -378,7 +378,7 @@ import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import {CircleCheckFilled, CircleCloseFilled, Filter, Search} from '@element-plus/icons-vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import mwAPI from '@/api/mwManagement.js';
-import {useAuthStore} from '@/stores/auth';
+import {useAuthStore} from '@/stores/auth.js';
 
 // 响应式数据
 const wireMaterials = ref([]);

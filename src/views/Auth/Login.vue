@@ -382,6 +382,16 @@ const features = computed(() => [
   }
 ]);
 
+// 检测是否为PE端（平板/移动端）
+const isPEDevice = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isMobile = /mobile|android|iphone|ipad|phone/i.test(userAgent);
+  const isTablet = /ipad|tablet/i.test(userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  return isMobile || isTablet || window.innerWidth <= 1024;
+};
+
 const toggleRootLogin = () => {
   isRootLogin.value = !isRootLogin.value;
   error.value = '';
@@ -435,16 +445,21 @@ const handleAccountLogin = async () => {
     loading.value = true;
     error.value = '';
 
-    // 调用API登录
     const response = await api.loginWithUsername(
         accountForm.value.account,
         accountForm.value.password,
-        accountForm.value.remember // 添加remember参数
+        accountForm.value.remember
     );
 
     if (response.code === 'success') {
-      authStore.setUser(response)
-      router.push('/data-screen');
+      authStore.setUser(response);
+
+      // PE端跳转到PE版数据大屏，PC端保持不变
+      if (isPEDevice()) {
+        router.push('/data-screen-pe');
+      } else {
+        router.push('/data-screen');
+      }
     } else {
       error.value = response.msg || '登录失败';
     }
@@ -455,21 +470,27 @@ const handleAccountLogin = async () => {
   }
 };
 
+
 const handleCodeLogin = async () => {
   try {
     loading.value = true;
     error.value = '';
 
-    // 调用API登录
     const response = await api.loginWithCode(
         codeForm.value.email,
         codeForm.value.code,
-        codeForm.value.remember // 添加remember参数
+        codeForm.value.remember
     );
 
     if (response.code === 'success') {
-      authStore.setUser(response)
-      router.push('/data-screen');
+      authStore.setUser(response);
+
+      // PE端跳转到PE版数据大屏，PC端保持不变
+      if (isPEDevice()) {
+        router.push('/data-screen-pe');
+      } else {
+        router.push('/data-screen');
+      }
     } else {
       error.value = response.msg || '登录失败';
     }

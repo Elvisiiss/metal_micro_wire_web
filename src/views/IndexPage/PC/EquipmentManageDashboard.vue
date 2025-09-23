@@ -297,7 +297,7 @@ import {
   CircleCloseFilled, SuccessFilled
 } from '@element-plus/icons-vue'
 import adminAPI from '@/api/admin.js'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/auth.js'
 
 // 响应式数据
 const devices = ref([])

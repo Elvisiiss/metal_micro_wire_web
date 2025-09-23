@@ -178,8 +178,8 @@ import {
   Plus, Delete, Edit, User, ChatDotRound
 } from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import chatAPI from '@/api/chat'
-import {useAuthStore} from '@/stores/auth'
+import chatAPI from '@/api/Chat.js'
+import {useAuthStore} from '@/stores/auth.js'
 import MarkdownIt from 'markdown-it'
 
 // 初始化 Markdown 解析器

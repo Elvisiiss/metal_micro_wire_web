@@ -320,7 +320,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import scenarioAPI from '@/api/scenario.js'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/auth.js'
 
 // 认证信息
 const authStore = useAuthStore()
