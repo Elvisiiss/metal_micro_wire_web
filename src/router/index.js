@@ -23,7 +23,7 @@ const router = createRouter({
         {
             path: '/wire',
             name: 'WireView',
-            component: () => import('@/views/public/WireView.vue'),
+            component: () => import('@/views/Public/WireView.vue'),
             props: (route) => ({ info: route.query.info })
         },
         {
